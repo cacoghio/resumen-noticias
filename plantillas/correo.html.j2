@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es-CL">
+<body style="margin:0;padding:0;background:#f4efe6;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe6;">
+<tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fffdf8;border:1px solid #cfc5b3;">
+  <tr><td style="padding:24px 24px 12px;border-bottom:3px double #1c1a17;font-family:Georgia,serif;">
+    <div style="font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5b554c;">Resumen de noticias</div>
+    <div style="font-size:30px;font-weight:bold;color:#1c1a17;line-height:1.1;margin-top:6px;">Las 5 <span style="color:#c2361b;">de hoy</span></div>
+    <div style="font-style:italic;color:#5b554c;margin-top:4px;">{{ fecha_larga }}</div>
+  </td></tr>
+  {% for n in noticias %}
+  <tr><td style="padding:18px 24px;border-bottom:1px solid #e3dccd;font-family:Georgia,serif;">
+    <div style="font-family:Courier New,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:{{ '#1f5c73' if n.ambito == 'mundo' else '#c2361b' }};">
+      {{ loop.index }} · {{ 'Chile' if n.ambito == 'chile' else 'Mundo' }} · {{ n.tema }}
+    </div>
+    <div style="font-size:19px;font-weight:bold;line-height:1.25;color:#1c1a17;margin:6px 0;">{{ n.titular }}</div>
+    <div style="font-size:15px;line-height:1.5;color:#3d3830;">{{ n.bajada }}</div>
+    <div style="font-size:13px;color:#5b554c;margin-top:8px;">
+      {% for f in n.fuentes[:3] %}<a href="{{ f.link }}" style="color:#5b554c;">{{ f.medio }}</a>{{ " · " if not loop.last }}{% endfor %}
+    </div>
+  </td></tr>
+  {% endfor %}
+  <tr><td align="center" style="padding:24px;">
+    <a href="{{ url_pagina }}" style="display:inline-block;background:#c2361b;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:16px;padding:12px 22px;">Leer el análisis completo →</a>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
