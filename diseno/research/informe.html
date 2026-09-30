@@ -1,0 +1,401 @@
+<title>Estudio de diseño Radar IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Literata:ital,opsz,wght@0,7..72,400..600;1,7..72,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: una columna de lectura (~68ch) con tablas y bocetos que pueden ensancharse hasta 1040px */
+  :root {
+    --bg: #eef1f4;
+    --panel: #ffffff;
+    --ink: #13171d;
+    --ink-2: #4a5360;
+    --line: #d5dbe3;
+    --accent: #1f5bd8;
+    --signal: #d9822b;
+    --wf: #c9d1db;
+    --wf-strong: #8d98a7;
+    --good: #1b7f5a;
+    --bad: #b3372c;
+    --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --f-body: "Literata", Georgia, "Times New Roman", serif;
+    --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --panel: #161a20; --ink: #e9edf2; --ink-2: #a3adba; --line: #2a313b;
+      --accent: #7aa2ff; --signal: #f0a254; --wf: #2c343f; --wf-strong: #5d6878; --good: #5fd3a4; --bad: #ff8a7d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --panel: #161a20; --ink: #e9edf2; --ink-2: #a3adba; --line: #2a313b;
+    --accent: #7aa2ff; --signal: #f0a254; --wf: #2c343f; --wf-strong: #5d6878; --good: #5fd3a4; --bad: #ff8a7d;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 1.0625rem; line-height: 1.6; }
+  .pagina { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 40px 80px; }
+  .texto { max-width: 68ch; }
+  h1, h2, h3 { font-family: var(--f-display); letter-spacing: -0.01em; text-wrap: balance; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; font-weight: 800; font-stretch: 85%; margin: 8px 0 12px; }
+  h2 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); line-height: 1.1; font-weight: 700; margin: 0 0 12px; }
+  h3 { font-size: 1.15rem; font-weight: 700; margin: 0 0 4px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .eyebrow { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-family: var(--f-mono); font-size: .8rem; color: var(--ink-2); }
+  header.portada { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .bajada { font-size: 1.2rem; color: var(--ink-2); max-width: 60ch; }
+  section { padding-block: 40px 8px; }
+  .resumen { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; counter-reset: r; }
+  .resumen li { display: grid; grid-template-columns: 2.2em 1fr; gap: 8px; }
+  .resumen li::before { counter-increment: r; content: counter(r); font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; color: var(--signal); line-height: 1.3; }
+  .resumen b { font-weight: 600; }
+  .tabla { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--f-mono); }
+  tr:last-child td { border-bottom: 0; }
+  .barra { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+  .barra span.b { height: 8px; border-radius: 4px; background: var(--accent); }
+  .barra span.v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: .85rem; }
+  .grupo { font-family: var(--f-mono); font-size: .75rem; color: var(--ink-2); }
+  .patrones { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+  .patron { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .patron .id { font-family: var(--f-mono); font-size: .72rem; color: var(--signal); font-weight: 600; }
+  .patron p { margin: 0; font-size: .95rem; }
+  .patron .visto { font-family: var(--f-mono); font-size: .75rem; color: var(--ink-2); }
+  .patron .aqui { font-size: .92rem; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .patron svg { width: 100%; height: auto; display: block; }
+  .wf { fill: var(--wf); }
+  .wf-s { fill: var(--wf-strong); }
+  .wf-a { fill: var(--accent); }
+  .wf-o { fill: var(--signal); }
+  .wf-l { stroke: var(--wf-strong); fill: none; stroke-width: 1.5; }
+  .wf-la { stroke: var(--accent); fill: none; stroke-width: 1.5; }
+  .subgrupo { margin: 28px 0 12px; }
+  .dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+  .lista { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+  .lista b { font-weight: 600; }
+  .malo li::marker { color: var(--bad); }
+  .bueno li::marker { color: var(--good); }
+  .principios { display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .principios div { display: grid; grid-template-columns: minmax(0, 15ch) 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .principios dt, .principios .t { font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+  .direcciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .dir { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 8px; align-content: start; }
+  .dir .letra { font-family: var(--f-display); font-weight: 800; font-size: 2rem; line-height: 1; color: var(--accent); }
+  .dir p { margin: 0; font-size: .95rem; }
+  .muestras { display: flex; gap: 6px; }
+  .muestras i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); display: block; }
+  .aviso { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; font-size: .95rem; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-family: var(--f-mono); font-size: .75rem; color: var(--ink-2); }
+  @media (max-width: 560px) { .principios div { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+
+<div class="pagina">
+  <header class="portada">
+    <div class="eyebrow">Research de diseño · Radar IA</div>
+    <h1>Cómo se ve el mejor briefing diario del mundo</h1>
+    <p class="bajada">Revisé 30 referentes entre briefings, medios, agregadores, changelogs de producto y sitios premiados para decidir cómo debe verse y sentirse Radar IA. Aquí están los patrones que funcionan, los que hay que evitar y las oportunidades que nadie está aprovechando.</p>
+    <div class="meta"><span>30 referentes</span><span>21 revisados en vivo</span><span>Celular 375 px + escritorio</span><span>30-09-2026</span></div>
+  </header>
+
+  <section>
+    <div class="eyebrow">Resumen ejecutivo</div>
+    <h2>Lo que hacen los mejores</h2>
+    <ol class="resumen texto">
+      <li><div><b>Arriba siempre hay una lista cerrada de lo esencial.</b> The Economist, Semafor ("The World at a Glance") y Axios ("5 big things") dejan entender el día en menos de un minuto: la frase clave en negrita y el resto en gris.</div></li>
+      <li><div><b>Cada historia se divide en secciones rotuladas.</b> Semafor (NEWS / VIEW / NOTABLE) y Axios ("Why it matters") confirman nuestra estructura de Qué pasó / Por qué importa / Qué probar. Solo falta hacerla visible y escaneable.</div></li>
+      <li><div><b>La identidad viene de un ornamento del propio tema, no de fotos.</b> Los relojes de Semafor, la cinta de mercados del FT y el "Verge Score" son parte de la marca. Nuestro equivalente natural es el radar.</div></li>
+      <li><div><b>Los mejores changelogs son el modelo para los releases.</b> Vercel, GitHub y Raycast usan un riel con fecha o versión, chips de tipo y cambios agrupados. Encaja perfecto con Claude Code.</div></li>
+      <li><div><b>La cobertura es un dato de confianza.</b> Particle ("172 artículos"), Ground News ("72 fuentes") y Techmeme ("More:") muestran cuántos medios cubren algo. Tenemos ese dato y hoy casi no se ve.</div></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="eyebrow">Método</div>
+    <h2>Cómo se evaluó</h2>
+    <div class="texto">
+      <p>Cada referente se abrió en un celular emulado (375 px) y los más relevantes también en escritorio. Se registró su grilla, tipografía, color, densidad, jerarquía, el módulo de noticia y su elemento firma. Luego se puntuó de 1 a 5 en 10 criterios; escaneabilidad y jerarquía pesan doble porque son el trabajo principal de Radar IA: entender el día en 30 segundos desde el correo.</p>
+      <p>Los 9 que no se pudieron revisar en vivo (The Economist está bloqueado en el navegador, entre otros) se evaluaron desde conocimiento previo y desde la biblioteca local de sistemas de diseño. Las fichas completas están en <a href="https://github.com/cacoghio/resumen-noticias/blob/main/diseno/research/fichas.md">diseno/research/fichas.md</a>.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Ranking</div>
+    <h2>Los 15 mejor evaluados</h2>
+    <div class="tabla">
+      <table>
+        <thead><tr><th>#</th><th>Referente</th><th>Grupo</th><th>Puntaje (sobre 100)</th><th>Qué nos llevamos</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>The Economist · World in Brief</td><td class="grupo">Briefing</td><td><div class="barra"><span class="b" style="width:92px"></span><span class="v">92</span></div></td><td>Lo esencial como lista cerrada</td></tr>
+          <tr><td class="num">2</td><td>Vercel · Changelog</td><td class="grupo">Changelog</td><td><div class="barra"><span class="b" style="width:90px"></span><span class="v">90</span></div></td><td>Riel de fecha, RSS visible</td></tr>
+          <tr><td class="num">3</td><td>Semafor</td><td class="grupo">Briefing</td><td><div class="barra"><span class="b" style="width:88px"></span><span class="v">88</span></div></td><td>Glance numerado, secciones rotuladas, ornamento propio</td></tr>
+          <tr><td class="num">4</td><td>Rest of World</td><td class="grupo">Medio</td><td><div class="barra"><span class="b" style="width:85px"></span><span class="v">85</span></div></td><td>Titular sans + bajada serif</td></tr>
+          <tr><td class="num">5</td><td>GitHub · Changelog</td><td class="grupo">Changelog</td><td><div class="barra"><span class="b" style="width:85px"></span><span class="v">85</span></div></td><td>Chip de tipo, fecha compacta, archivo por mes</td></tr>
+          <tr><td class="num">6</td><td>NYT · The Morning</td><td class="grupo">Briefing</td><td><div class="barra"><span class="b" style="width:85px"></span><span class="v">85</span></div></td><td>Voz consistente y cierre amable</td></tr>
+          <tr><td class="num">7</td><td>Apple News</td><td class="grupo">App</td><td><div class="barra"><span class="b" style="width:85px"></span><span class="v">85</span></div></td><td>Tamaños táctiles, marca de la fuente</td></tr>
+          <tr><td class="num">8</td><td>The Guardian</td><td class="grupo">Medio</td><td><div class="barra"><span class="b" style="width:83px"></span><span class="v">83</span></div></td><td>Color por sección, hora relativa</td></tr>
+          <tr><td class="num">9</td><td>Financial Times</td><td class="grupo">Medio</td><td><div class="barra"><span class="b" style="width:83px"></span><span class="v">83</span></div></td><td>Fondo propio, cinta de datos</td></tr>
+          <tr><td class="num">10</td><td>Claude</td><td class="grupo">Producto</td><td><div class="barra"><span class="b" style="width:83px"></span><span class="v">83</span></div></td><td>Calma y legibilidad</td></tr>
+          <tr><td class="num">11</td><td>Anthropic · Newsroom</td><td class="grupo">Producto</td><td><div class="barra"><span class="b" style="width:82px"></span><span class="v">82</span></div></td><td>Aire y tipografía</td></tr>
+          <tr><td class="num">12</td><td>Wired</td><td class="grupo">Medio</td><td><div class="barra"><span class="b" style="width:82px"></span><span class="v">82</span></div></td><td>Seguridad tipográfica</td></tr>
+          <tr><td class="num">13</td><td>Linear · Now</td><td class="grupo">Changelog</td><td><div class="barra"><span class="b" style="width:80px"></span><span class="v">80</span></div></td><td>Pestañas de filtro por sección</td></tr>
+          <tr><td class="num">14</td><td>Raycast · Changelog</td><td class="grupo">Changelog</td><td><div class="barra"><span class="b" style="width:78px"></span><span class="v">78</span></div></td><td>Chip de versión, medidor</td></tr>
+          <tr><td class="num">15</td><td>Axios</td><td class="grupo">Briefing</td><td><div class="barra"><span class="b" style="width:77px"></span><span class="v">77</span></div></td><td>"Por qué importa" explícito</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Patrones a adoptar</div>
+    <h2>20 patrones, con dónde se ven y cómo los usamos</h2>
+
+    <h3 class="subgrupo">Leer el día en 30 segundos</h3>
+    <div class="patrones">
+      <article class="patron">
+        <span class="id">P1 · Lo esencial arriba</span>
+        <svg viewBox="0 0 280 110" role="img" aria-label="Boceto: lista numerada de tres líneas con la frase clave en negrita">
+          <text x="4" y="22" class="wf-o" font-family="monospace" font-size="15" font-weight="700">1</text><rect x="24" y="12" width="120" height="10" rx="2" class="wf-s"/><rect x="150" y="12" width="110" height="10" rx="2" class="wf"/>
+          <text x="4" y="56" class="wf-o" font-family="monospace" font-size="15" font-weight="700">2</text><rect x="24" y="46" width="90" height="10" rx="2" class="wf-s"/><rect x="120" y="46" width="140" height="10" rx="2" class="wf"/>
+          <text x="4" y="90" class="wf-o" font-family="monospace" font-size="15" font-weight="700">3</text><rect x="24" y="80" width="140" height="10" rx="2" class="wf-s"/><rect x="170" y="80" width="90" height="10" rx="2" class="wf"/>
+        </svg>
+        <p>Tres líneas numeradas: la frase clave en negrita y el resto en gris. Cerrada y sin scroll.</p>
+        <div class="visto">Visto en: Semafor (The World at a Glance), The Economist, Axios</div>
+        <div class="aqui">En Radar IA: bloque "En 30 segundos" generado por Gemini, arriba de todo, y el mismo en el correo.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P2 · Número que cierra</span>
+        <p>Decir cuántas cosas hay ("5 big things") da sensación de fin y de control.</p>
+        <div class="visto">Visto en: Axios, NYT The Morning</div>
+        <div class="aqui">En Radar IA: "Hoy: 7 señales · 4 min" en el encabezado y en el asunto del correo.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P3 · Tiempo de lectura</span>
+        <p>Cada ítem dice cuánto toma, y el total promete un límite ("in 5 minutes").</p>
+        <div class="visto">Visto en: TLDR AI</div>
+        <div class="aqui">En Radar IA: minutos totales arriba y una barra de progreso de lectura.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P4 · Asunto que resume</span>
+        <p>El asunto o título de la edición nombra las 2–3 historias principales.</p>
+        <div class="visto">Visto en: TLDR AI ("OpenAI Dots, GPT-6.1 Sol, software factories")</div>
+        <div class="aqui">En Radar IA: asunto = las 2 señales más importantes separadas por "·", sin emojis.</div>
+      </article>
+    </div>
+
+    <h3 class="subgrupo">La estructura de cada noticia</h3>
+    <div class="patrones">
+      <article class="patron">
+        <span class="id">P5 · Secciones rotuladas</span>
+        <svg viewBox="0 0 280 110" role="img" aria-label="Boceto: titular seguido de bloques con etiqueta">
+          <rect x="4" y="6" width="220" height="14" rx="2" class="wf-s"/>
+          <rect x="4" y="34" width="54" height="7" rx="1" class="wf-a"/><rect x="4" y="46" width="250" height="7" rx="1" class="wf"/><rect x="4" y="57" width="200" height="7" rx="1" class="wf"/>
+          <rect x="4" y="76" width="70" height="7" rx="1" class="wf-a"/><rect x="4" y="88" width="240" height="7" rx="1" class="wf"/>
+        </svg>
+        <p>Etiquetas fijas y cortas antes de cada bloque: se escanean como un pastel en capas.</p>
+        <div class="visto">Visto en: Semafor (Semaform), Axios (Smart Brevity), The Rundown</div>
+        <div class="aqui">En Radar IA: QUÉ PASÓ · POR QUÉ IMPORTA · QUÉ PROBAR, en mono mayúscula.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P6 · Primero la palabra que informa</span>
+        <p>Titulares y etiquetas empiezan con el dato ("Claude Code 2.1.285 permite…"). Evita el patrón en F.</p>
+        <div class="visto">Visto en: NN/g (layer-cake, F-pattern), Rest of World</div>
+        <div class="aqui">En Radar IA: regla en el prompt de Gemini; titulares de hasta 110 caracteres.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P7 · Titular sans + bajada serif</span>
+        <p>El contraste entre familias separa "qué es" de "cómo se cuenta" sin usar color.</p>
+        <div class="visto">Visto en: Rest of World, El País, FT</div>
+        <div class="aqui">En Radar IA: dos familias con roles fijos, más una mono para datos y comandos.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P8 · Cierre amable</span>
+        <p>Un final corto y humano ("para cerrar") que invita a volver mañana.</p>
+        <div class="visto">Visto en: NYT The Morning, Morning Brew</div>
+        <div class="aqui">En Radar IA: pie con la racha de días, un link al archivo y "mañana a las 8:30".</div>
+      </article>
+    </div>
+
+    <h3 class="subgrupo">Identidad sin fotos</h3>
+    <div class="patrones">
+      <article class="patron">
+        <span class="id">P9 · Ornamento del tema</span>
+        <svg viewBox="0 0 280 110" role="img" aria-label="Boceto: radar con tres sectores y puntos">
+          <circle cx="140" cy="55" r="48" class="wf-l"/><circle cx="140" cy="55" r="32" class="wf-l"/><circle cx="140" cy="55" r="16" class="wf-l"/>
+          <line x1="140" y1="55" x2="140" y2="7" class="wf-l"/><line x1="140" y1="55" x2="181.6" y2="79" class="wf-l"/><line x1="140" y1="55" x2="98.4" y2="79" class="wf-l"/>
+          <path d="M140 55 L140 7 A48 48 0 0 1 176 23 Z" fill="var(--accent)" opacity=".18"/>
+          <circle cx="152" cy="36" r="5" class="wf-o"/><circle cx="118" cy="62" r="4" class="wf-a"/><circle cx="160" cy="76" r="3.5" class="wf-a"/><circle cx="104" cy="40" r="3" class="wf-s"/>
+        </svg>
+        <p>Los relojes de Semafor o la cinta del FT son un dato vuelto marca.</p>
+        <div class="visto">Visto en: Semafor, FT, The Verge (Verge Score)</div>
+        <div class="aqui">En Radar IA: el <b>radar del día</b>, donde cada noticia es un punto (sector = sección, cercanía = importancia). Se puede clickear y tiene una lista accesible equivalente.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P10 · Color por sección</span>
+        <p>Un color por pilar, usado en el kicker y en los detalles, nunca como fondo completo.</p>
+        <div class="visto">Visto en: The Guardian, The Verge</div>
+        <div class="aqui">En Radar IA: 3 colores de sección (Claude Code, Anthropic, Competencia) que también se usan en el radar.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P11 · Fondo propio</span>
+        <p>Un tono de fondo reconocible identifica la marca sin logo (el salmón del FT).</p>
+        <div class="visto">Visto en: FT, Semafor, Anthropic</div>
+        <div class="aqui">En Radar IA: un fondo que no sea ni crema ni negro puro (los dos clichés actuales).</div>
+      </article>
+      <article class="patron">
+        <span class="id">P12 · Número de edición</span>
+        <p>"#224 · AUG 2026" convierte cada día en un objeto coleccionable.</p>
+        <div class="visto">Visto en: The Pudding, TLDR</div>
+        <div class="aqui">En Radar IA: "Edición N.º 1 · miércoles 30 sep" en la portada.</div>
+      </article>
+    </div>
+
+    <h3 class="subgrupo">Datos que dan confianza</h3>
+    <div class="patrones">
+      <article class="patron">
+        <span class="id">P13 · Cobertura visible</span>
+        <svg viewBox="0 0 280 60" role="img" aria-label="Boceto: fila de puntos que representan medios">
+          <circle cx="12" cy="30" r="6" class="wf-a"/><circle cx="30" cy="30" r="6" class="wf-a"/><circle cx="48" cy="30" r="6" class="wf-a"/><circle cx="66" cy="30" r="6" class="wf-a"/><circle cx="84" cy="30" r="6" class="wf-a"/><circle cx="102" cy="30" r="6" class="wf"/><circle cx="120" cy="30" r="6" class="wf"/>
+          <text x="140" y="35" font-family="monospace" font-size="13" fill="var(--ink-2)">5 medios</text>
+        </svg>
+        <p>Mostrar cuántos medios cubren la historia, con la lista expandible.</p>
+        <div class="visto">Visto en: Particle, Ground News, Techmeme, Google News</div>
+        <div class="aqui">En Radar IA: medidor de puntos + "Ver las 5 fuentes".</div>
+      </article>
+      <article class="patron">
+        <span class="id">P14 · Chip de versión + riel</span>
+        <svg viewBox="0 0 280 90" role="img" aria-label="Boceto: riel vertical con chip de versión y cambios agrupados">
+          <line x1="10" y1="4" x2="10" y2="86" class="wf-l"/>
+          <rect x="22" y="6" width="64" height="18" rx="9" class="wf-o"/><rect x="94" y="10" width="70" height="10" rx="2" class="wf"/>
+          <rect x="22" y="36" width="40" height="7" rx="1" class="wf-a"/><rect x="70" y="36" width="170" height="7" rx="1" class="wf"/>
+          <rect x="22" y="52" width="40" height="7" rx="1" class="wf-a"/><rect x="70" y="52" width="140" height="7" rx="1" class="wf"/>
+          <rect x="22" y="68" width="40" height="7" rx="1" class="wf-s"/><rect x="70" y="68" width="160" height="7" rx="1" class="wf"/>
+        </svg>
+        <p>Versión como chip, fecha compacta y cambios agrupados por tipo.</p>
+        <div class="visto">Visto en: Raycast (v2.6), GitHub (SEP.30 RELEASE), Vercel</div>
+        <div class="aqui">En Radar IA: tarjeta de release de Claude Code con Nuevo / Mejorado / Arreglado.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P15 · Hora relativa y zona</span>
+        <p>"hace 3 h" y "Actualizado 08:21 CLST" dan frescura y contexto local.</p>
+        <div class="visto">Visto en: The Guardian, El País, Particle</div>
+        <div class="aqui">En Radar IA: hora de generación en hora de Chile y antigüedad de cada señal.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P16 · Transparencia del método</span>
+        <p>Decir cómo se hizo (fuentes, IA usada, límites) aumenta la confianza.</p>
+        <div class="visto">Visto en: Ground News, AI News (smol.ai)</div>
+        <div class="aqui">En Radar IA: pie con las fuentes revisadas hoy, el modelo usado y las fuentes que fallaron.</div>
+      </article>
+    </div>
+
+    <h3 class="subgrupo">Interacción y correo</h3>
+    <div class="patrones">
+      <article class="patron">
+        <span class="id">P17 · Pestañas por sección</span>
+        <p>Pestañas pill y fijas para saltar entre secciones sin perder el lugar.</p>
+        <div class="visto">Visto en: Linear, The Verge, GitHub Changelog</div>
+        <div class="aqui">En Radar IA: navegación fija con conteo por sección ("Claude Code 2").</div>
+      </article>
+      <article class="patron">
+        <span class="id">P18 · Acción copiable</span>
+        <p>Comandos listos para copiar, con un botón y confirmación.</p>
+        <div class="visto">Visto en: Vercel, Mintlify, GitHub (copy RSS)</div>
+        <div class="aqui">En Radar IA: bloque "Qué probar" tipo terminal, con botón para copiar. Nadie en noticias lo hace.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P19 · Archivo por mes</span>
+        <p>Agrupar por mes, colapsable, con buscador y filtro.</p>
+        <div class="visto">Visto en: GitHub Changelog, The Pudding</div>
+        <div class="aqui">En Radar IA: calendario tipo heatmap + buscador sobre un índice JSON.</div>
+      </article>
+      <article class="patron">
+        <span class="id">P20 · Correo que resiste el modo oscuro</span>
+        <p>Colores que aguantan la inversión de Gmail, tablas de 600 px y un botón grande.</p>
+        <div class="visto">Visto en: Really Good Emails, Can I Email</div>
+        <div class="aqui">En Radar IA: correo con la misma identidad, versión compacta de "En 30 segundos" y botón al análisis.</div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Qué evitar y qué aprovechar</div>
+    <div class="dos">
+      <div>
+        <h2>Anti-patrones</h2>
+        <ul class="lista malo">
+          <li><b>Muros de cookies y anuncios</b> que tapan la primera pantalla (The Verge, Particle, Bloomberg, Ground News).</li>
+          <li><b>Depender de fotos:</b> sin imagen quedan cajas grises (Rest of World). Radar IA casi no tendrá fotos, así que debe ser tipográfico.</li>
+          <li><b>Efectos pesados</b> (glassmorphism, WebGL) que frenan la carga y bajan el contraste (Particle).</li>
+          <li><b>Densidad sin jerarquía:</b> muros de links (Hacker News, Techmeme).</li>
+          <li><b>El sponsor o el emoji como sistema</b> (TLDR).</li>
+          <li><b>Texto centrado largo</b> en el celular.</li>
+          <li><b>Los looks cliché de hoy:</b> crema + serif + terracota, negro + un verde ácido, degradado morado.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Oportunidades</h2>
+        <ul class="lista bueno">
+          <li><b>"Qué probar hoy":</b> noticias que terminan en una acción concreta y copiable.</li>
+          <li><b>Releases entendibles:</b> el changelog de Claude Code resumido, agrupado y con historial de versiones.</li>
+          <li><b>El radar como firma visual</b> y como resumen gráfico del día.</li>
+          <li><b>Cobertura y fuentes transparentes</b> en español, para IA.</li>
+          <li><b>Honestidad del día tranquilo:</b> "hoy no pasó nada importante", en vez de rellenar.</li>
+          <li><b>Memoria sin cuentas:</b> leído / no leído y racha, guardados en el navegador.</li>
+          <li><b>Voz en español de Chile</b> en un nicho dominado por newsletters en inglés.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Principios</div>
+    <h2>Siete reglas para Radar IA</h2>
+    <div class="principios">
+      <div><span class="t">30 segundos o nada</span><p>Lo esencial arriba, numerado y sin scroll. El resto es opcional.</p></div>
+      <div><span class="t">Señal, no ruido</span><p>La importancia decide el tamaño. Un día flojo se ve flojo, y está bien.</p></div>
+      <div><span class="t">Tipografía primero</span><p>Sin depender de fotos: la identidad está en el tipo, el color de sección y el radar.</p></div>
+      <div><span class="t">Útil hoy</span><p>Cada noticia de Claude Code termina en algo que se puede probar.</p></div>
+      <div><span class="t">Transparente</span><p>Siempre muestra de dónde viene: fuentes, cobertura, modelo y hora.</p></div>
+      <div><span class="t">Rápido como texto</span><p>Menos de 100 KB, sin frameworks ni trackers, y se abre al instante desde el correo.</p></div>
+      <div><span class="t">Replicable</span><p>Todo son tokens y componentes; la marca se cambia en un archivo de configuración.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Próximo paso</div>
+    <h2>Tres direcciones para prototipar</h2>
+    <p class="texto">Las tres usan las mismas noticias reales y los mismos patrones. Cambia el carácter. Cada una evita los looks cliché y sale del mundo del radar.</p>
+    <div class="direcciones">
+      <div class="dir">
+        <span class="letra">A</span>
+        <h3>Carta</h3>
+        <div class="muestras" aria-hidden="true"><i style="background:#e9eef0"></i><i style="background:#16324f"></i><i style="background:#e0572b"></i><i style="background:#3f8f86"></i></div>
+        <p>Editorial y cartográfica: papel de carta náutica, tinta azul Prusia, un serif afilado para los titulares y etiquetas condensadas. El radar es una rosa de los vientos con rumbos en grados.</p>
+      </div>
+      <div class="dir">
+        <span class="letra">B</span>
+        <h3>Consola</h3>
+        <div class="muestras" aria-hidden="true"><i style="background:#0c1518"></i><i style="background:#9fe3d8"></i><i style="background:#ffb547"></i><i style="background:#e8f0ee"></i></div>
+        <p>Instrumento de precisión: pantalla de radar de control aéreo, noticias como "fichas de vuelo" con campos, un barrido animado y datos en mono. Técnica, pero cálida.</p>
+      </div>
+      <div class="dir">
+        <span class="letra">C</span>
+        <h3>Boletín</h3>
+        <div class="muestras" aria-hidden="true"><i style="background:#fbfaf6"></i><i style="background:#1d1bd6"></i><i style="background:#ff5a1f"></i><i style="background:#ffd23f"></i></div>
+        <p>Revista pop de agencia: tipografía condensada enorme, bloques de color por sección, stickers con la versión y una cinta de teletipo. Con energía, sin perder legibilidad.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="aviso texto"><b>Ojo con el nombre:</b> la app Particle ya tiene una función llamada "Radar". Para uso personal no importa, pero si Radar IA se hace público conviene revisar la marca antes. El diseño deja el nombre como una variable fácil de cambiar.</div>
+  </section>
+
+  <footer>Radar IA · Research de diseño · 30-09-2026 · Las capturas de terceros se usaron solo como referencia local y no se publican.</footer>
+</div>

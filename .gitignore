@@ -13,3 +13,6 @@ venv/
 # Archivos temporales
 salida/
 *.log
+
+# Capturas de referentes de terceros: solo uso local
+diseno/research/capturas/
