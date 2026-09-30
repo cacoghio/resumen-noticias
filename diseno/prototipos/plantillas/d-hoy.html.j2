@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="es-CL" data-mov="sutil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar IA · {{ fecha_larga }}</title>
+<meta name="description" content="{{ total }} noticias de IA generativa en {{ minutos }} minutos. {{ portada.titular }}">
+<meta property="og:title" content="Radar IA · {{ fecha_larga }}">
+<meta property="og:description" content="{{ resumen_dia[0].lead }} {{ resumen_dia[0].resto }}">
+<meta property="og:image" content="{{ portada.imagen.url }}">
+<meta name="theme-color" content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+{% macro media(it, lugar='card') -%}
+  {%- set img = it.imagen -%}
+  {%- if img.tipo == 'foto' -%}
+    {%- set u = img.url | urlencode -%}<img src="https://wsrv.nl/?url={{ u }}&amp;w=1200&amp;output=webp&amp;q=76" srcset="https://wsrv.nl/?url={{ u }}&amp;w=640&amp;output=webp&amp;q=74 640w, https://wsrv.nl/?url={{ u }}&amp;w=1200&amp;output=webp&amp;q=76 1200w, https://wsrv.nl/?url={{ u }}&amp;w=1800&amp;output=webp&amp;q=74 1800w" sizes="{{ '100vw' if lugar != 'card' else '(min-width: 1100px) 800px, (min-width: 760px) 50vw, 100vw' }}" alt="" {{ 'fetchpriority="high"' if lugar == 'hero' else 'loading="lazy"' }} decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='{{ img.url }}'"><span class="credito">{{ img.credito }}</span>
+  {%- elif img.tipo == 'poster' -%}
+    <svg class="poster" viewBox="0 0 800 500" role="img" aria-label="Claude Code {{ it.version }}: {{ it.cambios.total }} cambios">
+      <rect width="800" height="500" fill="#0c0c0e"/>
+      {% for r in [90, 170, 250, 330, 410] %}<circle cx="640" cy="250" r="{{ r }}" fill="none" stroke="#ff6a3d" stroke-opacity="{{ 0.34 - loop.index0 * 0.06 }}"/>{% endfor %}
+      <path d="M640 250 L640 -160 A410 410 0 0 1 930 -40 Z" fill="#ff6a3d" fill-opacity=".10"/>
+      <text x="56" y="98" fill="#a1a1a6" font-family="DM Mono, monospace" font-size="26" letter-spacing="2">CLAUDE CODE · RELEASE</text>
+      <text x="48" y="318" fill="#ffffff" font-family="'Big Shoulders Display', Impact, sans-serif" font-weight="900" font-size="230" letter-spacing="-2">{{ it.version }}</text>
+      {% set x = namespace(v=56) %}
+      {% for b in it.cambios.barras %}<rect x="{{ x.v }}" y="386" width="{{ (688 * b.pct / 100) - 4 }}" height="18" rx="3" fill="{{ {'nuevo': '#ff6a3d', 'mejora': '#f0b429', 'cambio': '#7b7bff', 'arreglo': '#3a3a3f'}[b.clave] }}"/>{% set x.v = x.v + 688 * b.pct / 100 %}{% endfor %}
+      <text x="56" y="446" fill="#f5f5f7" font-family="DM Mono, monospace" font-size="24">{{ it.cambios.total }} cambios · {% for b in it.cambios.barras %}{{ b.n }} {{ b.nombre | lower }}{{ ' · ' if not loop.last }}{% endfor %}</text>
+    </svg>
+  {%- elif img.tipo == 'retrato' -%}
+    <div class="retrato c-{{ it.color }}" role="img" aria-label="{{ img.nombre }}"><span>{{ img.iniciales }}</span><small>{{ img.nombre }}</small></div>
+  {%- else -%}
+    <svg class="arte c-{{ it.color }}" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Ilustración: {{ img.palabra }}">
+      <defs><filter id="d-{{ it.id }}-{{ lugar }}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter></defs>
+      <rect width="160" height="100" class="arte-fondo"/>
+      <g filter="url(#d-{{ it.id }}-{{ lugar }})">{% for m in it.arte.manchas %}<circle cx="{{ m.x * 1.6 }}" cy="{{ m.y }}" r="{{ m.r * 0.6 }}" class="arte-mancha" opacity="{{ m.o }}"/>{% endfor %}</g>
+      {% for r in [18, 34, 50, 66] %}<circle cx="118" cy="50" r="{{ r }}" fill="none" class="arte-anillo"/>{% endfor %}
+      <line x1="118" y1="50" x2="{{ 118 + (it.arte.bx - 50) * 1.4 }}" y2="{{ 50 + (it.arte.by - 50) * 1.4 }}" class="arte-barrido"/>
+      <text x="10" y="88" class="arte-palabra">{{ img.palabra }}</text>
+    </svg>
+  {%- endif -%}
+{%- endmacro %}
+<style>
+  /* Layout: una columna en celular (portada a sangre → 30 s → número → filtros fijos → tarjetas); en escritorio, grilla tipo bento. Tarjetas se abren en una hoja a pantalla completa. */
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface-2: #e9e7e1;
+    --ink: #111112;
+    --ink-2: #5c5a55;
+    --ink-3: #8a8883;
+    --line: rgba(17, 17, 18, .1);
+    --accent: #ff4f17;
+    --cc: #ff4f17;
+    --mod: #3b3bf5;
+    --age: #0a9467;
+    --ind: #b27a00;
+    --seg: #cc2f66;
+    --blur-bg: rgba(244, 243, 239, .78);
+    --f-ui: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --f-num: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+    --f-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --f-mono: "DM Mono", ui-monospace, Consolas, monospace;
+    --ease: cubic-bezier(.2, .7, .1, 1);
+    --r-card: 22px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000; --surface: #111113; --surface-2: #1c1c1f; --ink: #f5f5f7; --ink-2: #a1a1a6; --ink-3: #6e6e73;
+      --line: rgba(255, 255, 255, .12); --accent: #ff6a3d; --cc: #ff6a3d; --mod: #8080ff; --age: #2fd39a; --ind: #f0b429; --seg: #ff5c93;
+      --blur-bg: rgba(0, 0, 0, .72); color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --surface: #111113; --surface-2: #1c1c1f; --ink: #f5f5f7; --ink-2: #a1a1a6; --ink-3: #6e6e73;
+    --line: rgba(255, 255, 255, .12); --accent: #ff6a3d; --cc: #ff6a3d; --mod: #8080ff; --age: #2fd39a; --ind: #f0b429; --seg: #ff5c93;
+    --blur-bg: rgba(0, 0, 0, .72); color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 120px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 1.0625rem; line-height: 1.55; font-optical-sizing: auto; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .envoltura { max-width: 1240px; margin: 0 auto; padding-inline: 16px; }
+  .eyebrow { font-family: var(--f-mono); font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin: 0; }
+  .c-cc { --c: var(--cc); } .c-mod { --c: var(--mod); } .c-age { --c: var(--age); } .c-ind { --c: var(--ind); } .c-seg { --c: var(--seg); }
+  .punto { width: 8px; height: 8px; border-radius: 50%; background: var(--c); display: inline-block; flex: none; }
+
+  /* Barra superior */
+  .barra { position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); background: var(--blur-bg); backdrop-filter: saturate(1.6) blur(18px); -webkit-backdrop-filter: saturate(1.6) blur(18px); border-bottom: 1px solid var(--line); }
+  .barra .envoltura { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+  .marca { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-family: var(--f-num); font-weight: 900; font-size: 1.5rem; letter-spacing: .01em; text-transform: uppercase; }
+  .marca b { color: var(--accent); }
+  .marca svg { width: 22px; height: 22px; }
+  .glifo-barrido { transform-origin: 12px 12px; animation: gira 4s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .mov { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; }
+  .mov button { font: 500 .78rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: .06em; border: 0; background: transparent; color: var(--ink-2); padding: 9px 12px; border-radius: 999px; cursor: pointer; min-height: 34px; }
+  .mov button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+  /* Portada */
+  .hero { position: relative; margin: 0 auto; max-width: 1400px; }
+  .hero-media { position: relative; overflow: hidden; aspect-ratio: 16 / 11; max-height: 82vh; width: 100%; background: var(--surface-2); }
+  @media (min-width: 900px) { .hero { padding: 16px 16px 0; } .hero-media { aspect-ratio: 16 / 8; border-radius: 28px; } }
+  .hero-media img { width: 100%; height: 100%; object-fit: cover; display: block; transform-origin: 50% 40%; }
+  .hero-media::after { content: none; }
+  @media (min-width: 900px) { .hero-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .55) 38%, rgba(0, 0, 0, 0) 68%); pointer-events: none; } }
+  .credito { position: absolute; right: 10px; top: 10px; z-index: 2; font: 400 .66rem/1 var(--f-mono); color: #fff; background: rgba(0, 0, 0, .45); padding: 5px 7px; border-radius: 6px; letter-spacing: .03em; }
+  .hero-texto { position: relative; z-index: 2; padding: 20px 16px 8px; display: grid; gap: 12px; max-width: 900px; }
+  @media (min-width: 900px) { .hero-texto { position: absolute; inset: auto auto 16px 16px; color: #fff; padding: 0 56px 44px; max-width: 54%; } .hero-texto h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); } .hero-texto .eyebrow { color: rgba(255, 255, 255, .8); } .hero-texto p.bajada { color: rgba(255, 255, 255, .86) !important; } }
+  .hero-texto h1 { margin: 0; font-weight: 700; font-size: clamp(2rem, 7.4vw, 4.4rem); line-height: 1.02; letter-spacing: -.035em; text-wrap: balance; font-stretch: 92%; }
+  .hero-texto p.bajada { margin: 0; font-size: clamp(1.02rem, 2.6vw, 1.3rem); color: var(--ink-2); max-width: 58ch; line-height: 1.4; }
+  .boton { display: inline-flex; align-items: center; gap: 8px; font: 600 1rem/1 var(--f-ui); background: var(--ink); color: var(--bg); border: 0; border-radius: 999px; padding: 13px 20px; min-height: 46px; cursor: pointer; text-decoration: none; justify-self: start; }
+  .boton span { transition: transform .25s var(--ease); }
+  .boton:hover span { transform: translateX(3px); }
+  @media (min-width: 900px) { .hero .boton { background: #fff; color: #111; } }
+
+  /* En 30 segundos + número del día */
+  .apertura { display: grid; gap: 40px; padding-block: 48px 24px; }
+  @media (min-width: 980px) { .apertura { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 64px; padding-block: 72px 32px; align-items: start; } }
+  .brief h2 { margin-bottom: 18px; }
+  .brief ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+  .brief li { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 6px; }
+  .brief .n { font-family: var(--f-num); font-weight: 900; font-size: 2rem; line-height: 1; color: var(--accent); }
+  .brief p { margin: 0; font-size: clamp(1.28rem, 3.6vw, 1.75rem); line-height: 1.28; letter-spacing: -.015em; font-weight: 500; color: var(--ink-2); text-wrap: pretty; }
+  html[data-mov="cine"] .brief p { color: var(--ink-3); }
+  .brief p b { color: var(--ink); font-weight: 700; }
+  .brief .pal { transition: color .35s var(--ease); }
+  html[data-mov="cine"] .brief .pal.on { color: var(--ink); }
+  .numero { background: var(--surface); border-radius: var(--r-card); padding: 24px; display: grid; gap: 10px; align-content: start; border: 1px solid var(--line); }
+  .cifra { font-family: var(--f-num); font-weight: 900; font-size: clamp(7rem, 34vw, 12rem); line-height: .82; color: var(--accent); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .cifra-texto { margin: 0; font-size: 1.2rem; font-weight: 600; letter-spacing: -.01em; }
+  .apilada { display: flex; gap: 3px; height: 10px; }
+  .apilada span { display: block; border-radius: 3px; }
+  .k-nuevo { background: var(--cc); } .k-mejora { background: var(--ind); } .k-cambio { background: var(--mod); } .k-arreglo { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font: 400 .78rem/1.4 var(--f-mono); color: var(--ink-2); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+  .numero .boton { margin-top: 6px; }
+
+  /* Filtros */
+  .filtros { position: sticky; top: calc(52px + env(safe-area-inset-top, 0px)); z-index: 20; background: var(--blur-bg); backdrop-filter: saturate(1.6) blur(18px); -webkit-backdrop-filter: saturate(1.6) blur(18px); border-bottom: 1px solid var(--line); }
+  .filtros ul { list-style: none; margin: 0 auto; max-width: 1240px; padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .filtros button { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font: 500 .92rem/1 var(--f-ui); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 10px 14px; border-radius: 999px; min-height: 40px; cursor: pointer; }
+  .filtros button small { font-family: var(--f-mono); color: var(--ink-3); font-size: .78rem; }
+  .filtros button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .filtros button[aria-pressed="true"] small { color: inherit; opacity: .7; }
+
+  /* Tarjetas */
+  .feed { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); padding-block: 24px 16px; }
+  @media (min-width: 760px) { .feed { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
+  @media (min-width: 1100px) { .feed { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: dense; } .card.grande.imp3 { grid-column: span 2; } }
+  .grupo { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; padding-top: 22px; }
+  .grupo h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 700; letter-spacing: -.03em; }
+  .grupo .eyebrow { color: var(--ink-3); }
+  .card { min-width: 0; }
+  .card > a { display: grid; text-decoration: none; background: var(--surface); border-radius: var(--r-card); overflow: hidden; height: 100%; border: 1px solid var(--line); transition: transform .35s var(--ease), box-shadow .35s var(--ease); }
+  .card > a:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .35); }
+  .card-media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--surface-2); }
+  .card-media img, .card-media svg, .card-media .retrato { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card-texto { padding: 18px 20px 20px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .card-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 400 .74rem/1.3 var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin: 0; }
+  .card h3 { margin: 0; font-size: clamp(1.25rem, 3.4vw, 1.5rem); line-height: 1.14; letter-spacing: -.025em; font-weight: 700; text-wrap: balance; }
+  .card.imp3 h3 { font-size: clamp(1.45rem, 4.4vw, 2rem); }
+  .card-bajada { margin: 0; color: var(--ink-2); font-size: 1rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-meta { margin: 4px 0 0; display: flex; gap: 12px; align-items: center; font: 400 .78rem/1 var(--f-mono); color: var(--ink-3); }
+  .cob { display: inline-flex; gap: 2px; }
+  .cob i { width: 5px; height: 5px; border-radius: 50%; background: var(--c, var(--ink)); display: block; }
+  .card.fila > a { grid-template-columns: 118px minmax(0, 1fr); align-items: stretch; }
+  .card.fila .card-media { aspect-ratio: auto; height: 100%; min-height: 132px; }
+  .card.fila .card-texto { padding: 14px 16px; }
+  .card.fila h3 { font-size: 1.12rem; }
+  .card.fila .card-bajada { -webkit-line-clamp: 2; font-size: .95rem; }
+  .card.es-portada { display: none; }
+  [data-filtro]:not([data-filtro="todo"]) .card.es-portada { display: block; }
+  [data-filtro]:not([data-filtro="todo"]) .modulo { display: none; }
+
+  /* Ilustraciones de respaldo */
+  .arte-fondo { fill: var(--surface-2); }
+  .arte-mancha { fill: var(--c); }
+  .arte-anillo { stroke: #fff; stroke-opacity: .35; stroke-width: .5; }
+  .arte-barrido { stroke: #fff; stroke-opacity: .8; stroke-width: .7; }
+  .arte-palabra { font: 800 17px var(--f-ui); fill: #fff; letter-spacing: -.5px; }
+  .retrato { background: radial-gradient(120% 90% at 20% 10%, color-mix(in oklab, var(--c) 70%, white) 0%, var(--c) 45%, color-mix(in oklab, var(--c) 45%, black) 100%); display: grid; place-content: center; text-align: center; color: #fff; }
+  .retrato span { font: italic 400 clamp(4rem, 18vw, 7rem)/1 var(--f-serif); letter-spacing: -.02em; }
+  .retrato small { font: 400 .72rem/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; opacity: .85; margin-top: 8px; }
+  .card.fila .retrato span { font-size: 2.6rem; }
+  .card.fila .retrato small { display: none; }
+  .card.fila .arte-palabra { display: none; }
+
+  /* Módulos: frase, comparativa, agenda */
+  .modulo { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 26px 22px; min-width: 0; }
+  @media (min-width: 900px) { .modulo { padding: 40px 44px; } }
+  .frase blockquote { margin: 14px 0 12px; font: italic 400 clamp(2.4rem, 9vw, 4.8rem)/1 var(--f-serif); letter-spacing: -.02em; }
+  .frase blockquote span { display: block; font-size: .42em; color: var(--ink-2); font-style: normal; font-family: var(--f-ui); letter-spacing: -.01em; margin-top: 10px; }
+  .frase .quien { display: flex; align-items: center; gap: 12px; }
+  .frase .mono-av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-content: center; background: var(--seg); color: #fff; font: italic 400 1.2rem/1 var(--f-serif); }
+  .frase .quien p { margin: 0; font-size: .95rem; color: var(--ink-2); }
+  .frase .quien b { color: var(--ink); font-weight: 600; }
+  .modulo h2 { margin: 6px 0 16px; font-size: clamp(1.5rem, 4vw, 2.2rem); letter-spacing: -.03em; line-height: 1.05; }
+  .tabla { overflow-x: auto; }
+  .tabla table { width: 100%; border-collapse: collapse; }
+  @media (max-width: 699px) {
+    .tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .tabla tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .tabla td { display: block; padding: 0 !important; border: 0 !important; }
+    .tabla td.modelo { grid-column: 1; } .tabla td.lab { grid-column: 1; } .tabla td.fecha { grid-column: 2; grid-row: 1; text-align: right; }
+    .tabla td.promesa { grid-column: 1 / -1; margin-top: 4px; } .tabla td.est { grid-column: 1 / -1; margin-top: 8px; }
+  }
+  .tabla th { text-align: left; font: 400 .72rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); padding: 0 12px 10px 0; border-bottom: 1px solid var(--line); }
+  .tabla td { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--line); vertical-align: top; font-size: .98rem; }
+  .tabla td.modelo { font-weight: 700; white-space: nowrap; }
+  .tabla td.lab, .tabla td.fecha { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-2); white-space: nowrap; }
+  .estado { font: 500 .74rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: .04em; padding: 5px 8px; border-radius: 999px; white-space: nowrap; background: color-mix(in oklab, var(--age) 16%, transparent); color: var(--age); }
+  .estado.no { background: color-mix(in oklab, var(--seg) 16%, transparent); color: var(--seg); }
+  .nota-fuente { margin: 12px 0 0; font: 400 .78rem/1.5 var(--f-mono); color: var(--ink-3); }
+  .agenda ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .agenda li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); align-items: start; }
+  .agenda .fecha-cal { text-align: center; border-radius: 14px; background: var(--surface-2); padding: 8px 0 10px; }
+  .agenda .fecha-cal b { display: block; font: 900 2rem/1 var(--f-num); }
+  .agenda .fecha-cal small { font: 500 .7rem/1 var(--f-mono); letter-spacing: .1em; color: var(--accent); }
+  .agenda h3 { margin: 0; font-size: 1.15rem; letter-spacing: -.02em; }
+  .agenda p { margin: 2px 0 0; color: var(--ink-2); font-size: .95rem; }
+  .agenda .donde { font: 400 .78rem/1.5 var(--f-mono); color: var(--ink-3); }
+
+  /* Hoja (noticia abierta) */
+  dialog.hoja { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--ink); overflow-y: auto; overscroll-behavior: contain; }
+  @media (min-width: 900px) { dialog.hoja { max-width: 860px; height: calc(100% - 48px); margin: 24px auto; border-radius: 28px; box-shadow: 0 40px 120px rgba(0, 0, 0, .45); } }
+  dialog.hoja::backdrop { background: rgba(0, 0, 0, .5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .cerrar { position: sticky; top: calc(10px + env(safe-area-inset-top, 0px)); float: right; margin: 10px 10px -54px 0; z-index: 5; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .55); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .historia-media { position: relative; aspect-ratio: 16 / 10; background: var(--surface-2); overflow: hidden; }
+  .historia-media img, .historia-media svg, .historia-media .retrato { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .historia-cuerpo { padding: 22px 20px 48px; display: grid; gap: 14px; max-width: 720px; margin: 0 auto; min-width: 0; overflow-wrap: anywhere; }
+  @media (min-width: 900px) { .historia-cuerpo { padding: 36px 48px 64px; } }
+  .historia h2 { margin: 0; font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1.04; letter-spacing: -.035em; font-weight: 700; text-wrap: balance; overflow-wrap: normal; }
+  .historia-bajada { margin: 0; font-size: 1.2rem; line-height: 1.45; color: var(--ink-2); }
+  .ficha-datos { margin: 6px 0; display: grid; border-top: 1px solid var(--line); }
+  .ficha-datos div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .ficha-datos dt { font: 400 .76rem/1.4 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .ficha-datos dd { margin: 0; text-align: right; font-size: .98rem; }
+  .rotulo { margin: 14px 0 0; font: 500 .76rem/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--c); }
+  .historia p.texto { margin: 0; font-size: 1.1rem; line-height: 1.62; }
+  .probar { background: #0c0c0e; color: #f5f5f7; border-radius: 18px; padding: 18px; display: grid; gap: 12px; margin-top: 8px; }
+  .probar .rotulo { margin: 0; color: #ff8a5c; }
+  .probar p { margin: 0; color: #c7c7cc; }
+  .cmd { display: flex; align-items: center; gap: 10px; background: #1c1c1f; border-radius: 12px; padding: 6px 6px 6px 14px; min-width: 0; max-width: 100%; }
+  .cmd code { flex: 1; min-width: 0; font: 400 .88rem/1.4 var(--f-mono); overflow-x: auto; white-space: nowrap; }
+  .cmd code::before { content: "$ "; color: #6e6e73; }
+  .copiar { font: 500 .74rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: .06em; border: 0; border-radius: 9px; background: #ff6a3d; color: #111; padding: 10px 12px; min-height: 38px; cursor: pointer; }
+  .release { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+  .release ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: .97rem; }
+  .release li::marker { color: var(--cc); }
+  code { font-family: var(--f-mono); font-size: .9em; }
+  .video-link { display: flex; align-items: center; gap: 12px; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+  .video-link b { font-weight: 600; }
+  .video-link .play { width: 44px; height: 44px; border-radius: 50%; background: #ff0033; color: #fff; display: grid; place-content: center; flex: none; }
+  .fuentes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .fuentes li a { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .fuentes li b { font-weight: 600; white-space: nowrap; }
+  .fuentes li span { color: var(--ink-2); text-align: right; font-size: .95rem; }
+  .historia-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+  .historia-nav button { font: 600 .95rem/1 var(--f-ui); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 13px 18px; min-height: 46px; cursor: pointer; }
+  .historia-nav button[hidden] { display: none; }
+
+  /* Pie */
+  .pie { padding-block: 40px 64px; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); color: var(--ink-2); }
+  @media (min-width: 900px) { .pie { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .pie h2 { margin: 0 0 6px; font-size: 1.05rem; color: var(--ink); letter-spacing: -.01em; }
+  .pie p { margin: 0; font-size: .95rem; }
+  .fin { font-family: var(--f-num); font-weight: 900; text-transform: uppercase; font-size: clamp(3rem, 14vw, 7rem); line-height: .85; color: var(--ink); margin: 32px 0 0; letter-spacing: -.01em; }
+  .fin b { color: var(--accent); }
+
+  /* Movimiento */
+  .aparece { opacity: 1; }
+  html.js .aparece { opacity: 0; transform: translateY(18px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+  html.js .aparece.visible { opacity: 1; transform: none; }
+  html.js[data-mov="cine"] .aparece { transform: translateY(46px) scale(.96); transition-duration: .9s; }
+  html.js[data-mov="cine"] .aparece.visible { transform: none; }
+  html[data-mov="cine"] .hero-media img { transform: scale(calc(1.14 - .14 * var(--p, 0))) translateY(calc(var(--p, 0) * 28px)); }
+  html[data-mov="cine"] .hero-texto { transform: translateY(calc(var(--p, 0) * -24px)); }
+  ::view-transition-old(foto), ::view-transition-new(foto) { animation-duration: .45s; animation-timing-function: var(--ease); }
+  html[data-mov="cine"]::view-transition-old(foto), html[data-mov="cine"]::view-transition-new(foto) { animation-duration: .75s; }
+  @media (prefers-reduced-motion: reduce) {
+    html.js .aparece, html.js[data-mov="cine"] .aparece { opacity: 1; transform: none; transition: none; }
+    html[data-mov="cine"] .hero-media img, html[data-mov="cine"] .hero-texto { transform: none; opacity: 1; }
+    .glifo-barrido { animation: none; }
+    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .historia:target { display: block !important; }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body data-filtro="todo">
+<header class="barra">
+  <div class="envoltura">
+    <a class="marca" href="#arriba" aria-label="Radar IA, inicio">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="1.4"/><g class="glifo-barrido"><path d="M12 12 L12 2 A10 10 0 0 1 19.07 4.93 Z" fill="var(--accent)" opacity=".85"/></g><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>
+      <span>Radar<b>/</b>IA</span>
+    </a>
+    <div class="mov" role="group" aria-label="Movimiento de la página">
+      <button type="button" data-mov="sutil" aria-pressed="true">Sutil</button>
+      <button type="button" data-mov="cine" aria-pressed="false">Cine</button>
+    </div>
+  </div>
+</header>
+
+<main id="arriba">
+  <section class="hero" aria-labelledby="t-portada">
+    <div class="hero-media" id="media-portada">{{ media(portada, 'hero') }}</div>
+    <div class="hero-texto">
+      <p class="eyebrow">{{ fecha_larga }} · Edición {{ edicion }} · {{ total }} noticias · {{ minutos }} min</p>
+      <h1 id="t-portada">{{ portada.titular }}</h1>
+      <p class="bajada">{{ portada.bajada }}</p>
+      <a class="boton" href="#h-{{ portada.id }}" data-abrir="{{ portada.id }}">Leer la historia <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <div class="envoltura apertura">
+    <section class="brief aparece" aria-labelledby="t-brief">
+      <h2 id="t-brief" class="eyebrow">En 30 segundos</h2>
+      <ol>
+        {% for r in resumen_dia %}<li><span class="n" aria-hidden="true">{{ loop.index }}</span><p><b>{{ r.lead }}</b> <span class="resto">{{ r.resto }}</span></p></li>
+        {% endfor %}
+      </ol>
+    </section>
+    <section class="numero aparece" aria-labelledby="t-numero">
+      <h2 id="t-numero" class="eyebrow">El número del día</h2>
+      <div class="cifra" data-cifra="{{ numero.valor }}">{{ numero.valor }}</div>
+      <p class="cifra-texto">{{ numero.texto }}</p>
+      <div class="apilada" role="img" aria-label="{% for b in release.cambios.barras %}{{ b.n }} {{ b.nombre | lower }}{{ ', ' if not loop.last }}{% endfor %}">{% for b in release.cambios.barras %}<span class="k-{{ b.clave }}" style="width: {{ b.pct }}%"></span>{% endfor %}</div>
+      <div class="leyenda">{% for b in release.cambios.barras %}<span><i class="k-{{ b.clave }}"></i>{{ b.n }} {{ b.nombre | lower }}</span>{% endfor %}</div>
+      <a class="boton oscuro" href="#h-{{ release.id }}" data-abrir="{{ release.id }}">Ver el release <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+
+  <nav class="filtros" aria-label="Filtrar por categoría">
+    <ul>
+      <li><button type="button" data-cat="todo" aria-pressed="true">Todo <small>{{ total }}</small></button></li>
+      {% for c in categorias %}{% if c.n %}<li><button type="button" data-cat="{{ c.clave }}" aria-pressed="false" class="c-{{ c.color }}"><i class="punto"></i>{{ c.nombre }} <small>{{ c.n }}</small></button></li>{% endif %}{% endfor %}
+    </ul>
+  </nav>
+
+  <div class="envoltura feed" id="feed">
+    {% set previa = namespace(cat='') %}
+    {% for it in items %}
+      {% if it.categoria != previa.cat %}
+        {% if it.categoria == 'seguridad' %}
+        <section class="modulo frase aparece" aria-labelledby="t-frase">
+          <h2 id="t-frase" class="eyebrow">La frase del día</h2>
+          <blockquote lang="en">{{ frase.texto }}<span lang="es">{{ frase.traduccion }}</span></blockquote>
+          <div class="quien"><span class="mono-av" aria-hidden="true">DA</span><p><b>{{ frase.persona }}</b>, {{ frase.rol }}. Vía {{ frase.fuente }}.</p></div>
+        </section>
+        {% endif %}
+        {% set cat = categorias | selectattr('clave', 'equalto', it.categoria) | first %}
+        <div class="grupo c-{{ cat.color }}" data-grupo="{{ it.categoria }}"><i class="punto" aria-hidden="true"></i><h2>{{ cat.nombre }}</h2><span class="eyebrow">{{ cat.n }}</span></div>
+        {% set previa.cat = it.categoria %}
+      {% endif %}
+      {% set grande = it.importancia == 3 or it.imagen.tipo in ['foto', 'poster'] %}
+      <article class="card c-{{ it.color }} {{ 'grande' if grande else 'fila' }} imp{{ it.importancia }}{{ ' es-portada' if it.id == portada.id }} aparece" data-cat="{{ it.categoria }}">
+        <a href="#h-{{ it.id }}" data-abrir="{{ it.id }}" aria-haspopup="dialog">
+          <div class="card-media" data-media="{{ it.id }}">{{ media(it) }}</div>
+          <div class="card-texto">
+            <p class="card-eyebrow"><i class="punto"></i>{{ it.categoria_nombre }} · {{ it.empresa }}{% if it.es_release %} · Release{% endif %}{% if it.es_video %} · Video{% endif %}{% for p in it.personas %} · Voz: {{ p }}{% endfor %}</p>
+            <h3>{{ it.titular }}</h3>
+            <p class="card-bajada">{{ it.bajada }}</p>
+            <p class="card-meta"><span class="cob" aria-hidden="true">{% for i in range([it.cobertura, 8] | min) %}<i></i>{% endfor %}</span>{{ it.cobertura }} medio{{ 's' if it.cobertura != 1 }} · {{ it.lectura }} min</p>
+          </div>
+        </a>
+      </article>
+      {% if it.categoria == 'modelos' and (loop.last or items[loop.index].categoria != 'modelos') %}
+      <section class="modulo comparativa aparece" aria-labelledby="t-comp">
+        <p class="eyebrow">Comparativa de modelos</p>
+        <h2 id="t-comp">Lo que prometen los modelos de esta semana</h2>
+        <div class="tabla" tabindex="0" role="region" aria-labelledby="t-comp">
+          <table>
+            <thead><tr><th>Modelo</th><th>Laboratorio</th><th>Lanzamiento</th><th>Qué promete</th><th>Estado</th></tr></thead>
+            <tbody>
+              {% for f in comparativa.filas %}<tr><td class="modelo">{{ f.modelo }}</td><td class="lab">{{ f.lab }}</td><td class="fecha">{{ f.fecha }}</td><td class="promesa">{{ f.promesa }}</td><td class="est"><span class="estado{{ '' if f.ok else ' no' }}">{{ f.estado }}</span></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="nota-fuente">Fuentes: {% for n, l in comparativa.fuentes %}<a href="{{ l }}" rel="noopener" target="_blank">{{ n }}</a>{{ ', ' if not loop.last }}{% endfor %}. Cifras del propio laboratorio, sin pruebas independientes.</p>
+      </section>
+      {% endif %}
+    {% endfor %}
+
+    <section class="modulo agenda aparece" aria-labelledby="t-agenda">
+      <p class="eyebrow">Agenda</p>
+      <h2 id="t-agenda">Lo que viene</h2>
+      <ol>
+        {% for e in agenda %}<li><div class="fecha-cal"><b>{{ e.dia }}</b><small>{{ e.mes }}</small></div><div><h3>{% if e.link %}<a href="{{ e.link }}" rel="noopener" target="_blank">{{ e.nombre }}</a>{% else %}{{ e.nombre }}{% endif %}</h3><p>{{ e.tema }}</p><p class="donde">Hasta el {{ e.hasta }} · {{ e.lugar }}</p></div></li>
+        {% endfor %}
+      </ol>
+    </section>
+  </div>
+
+  <footer class="envoltura">
+    <p class="fin">Eso es<br>todo <b>por hoy</b></p>
+    <div class="pie">
+      <div><h2>Así se hizo</h2><p>{{ fuentes_revisadas }} fuentes revisadas a las {{ hora }} (hora de Chile). Sin respuesta: {{ fuentes_caidas | join(', ') }}. Selección y análisis con {{ modelo }}; revisa siempre las fuentes.</p></div>
+      <div><h2>Imágenes</h2><p>Fotos de las notas originales, con crédito. Cuando no hay una buena, va una ilustración propia de Radar IA.</p></div>
+      <div><h2>Próxima edición</h2><p>Mañana a las 08:30. Prototipo de diseño D · datos reales del 30-09-2026.</p></div>
+    </div>
+  </footer>
+</main>
+
+<dialog class="hoja" id="hoja" aria-labelledby="hoja-titulo">
+  <button class="cerrar" type="button" aria-label="Cerrar">×</button>
+  {% for it in items %}
+  <article class="historia c-{{ it.color }}" id="h-{{ it.id }}" data-id="{{ it.id }}" hidden>
+    <div class="historia-media" data-media-hoja="{{ it.id }}">{{ media(it, 'hoja') }}</div>
+    <div class="historia-cuerpo">
+      <p class="card-eyebrow"><i class="punto"></i>{{ it.categoria_nombre }} · {{ it.empresa }}{% if it.es_release %} · Release{% endif %}{% if it.es_video %} · Video{% endif %}{% for p in it.personas %} · Voz: {{ p }}{% endfor %}</p>
+      <h2 data-titulo>{{ it.titular }}</h2>
+      <p class="historia-bajada">{{ it.bajada }}</p>
+      <dl class="ficha-datos">
+        <div><dt>Fecha</dt><dd>30 sep 2026</dd></div>
+        <div><dt>Categoría</dt><dd>{{ it.categoria_nombre }}</dd></div>
+        <div><dt>Empresa</dt><dd>{{ it.empresa }}</dd></div>
+        <div><dt>Cobertura</dt><dd>{{ it.cobertura }} medio{{ 's' if it.cobertura != 1 }}</dd></div>
+        <div><dt>Lectura</dt><dd>{{ it.lectura }} min</dd></div>
+      </dl>
+      {% if it.es_release %}
+      <div class="release">
+        <p class="rotulo" style="margin:0">Lo nuevo en {{ it.version }}</p>
+        <div class="apilada">{% for b in it.cambios.barras %}<span class="k-{{ b.clave }}" style="width: {{ b.pct }}%"></span>{% endfor %}</div>
+        <div class="leyenda">{% for b in it.cambios.barras %}<span><i class="k-{{ b.clave }}"></i>{{ b.n }} {{ b.nombre | lower }}</span>{% endfor %}</div>
+        <ul>{% for d in it.cambios.destacados %}<li>{{ d | codigo }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      {% if it.es_video %}
+      <a class="video-link" href="{{ it.fuentes[0].link }}" rel="noopener" target="_blank"><span class="play" aria-hidden="true">▶</span><span><b>Ver el video en YouTube</b><br><small>{{ it.personas[0] }}</small></span></a>
+      {% endif %}
+      <h3 class="rotulo">Qué pasó</h3>
+      <p class="texto">{{ it.que_paso }}</p>
+      <h3 class="rotulo">Por qué importa</h3>
+      <p class="texto">{{ it.por_que_importa }}</p>
+      {% if it.que_probar %}
+      <div class="probar">
+        <p class="rotulo">Qué probar hoy</p>
+        <p>{{ it.que_probar }}</p>
+        {% for c in it.comandos %}<div class="cmd"><code>{{ c }}</code><button class="copiar" type="button" data-copiar="{{ c }}">Copiar</button></div>{% endfor %}
+      </div>
+      {% endif %}
+      <h3 class="rotulo">Fuentes</h3>
+      <ul class="fuentes">{% for f in it.fuentes[:5] %}<li><a href="{{ f.link }}" rel="noopener" target="_blank"><b>{{ f.medio }}</b><span>{{ f.titulo | truncate(70) }}</span></a></li>{% endfor %}</ul>
+      <nav class="historia-nav" aria-label="Otras noticias"><button type="button" data-ir="-1">← Anterior</button><button type="button" data-ir="1">Siguiente →</button></nav>
+    </div>
+  </article>
+  {% endfor %}
+</dialog>
+
+<script>
+(function () {
+  var raiz = document.documentElement;
+  var reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var guardar = function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} };
+  var leer = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+  /* Interruptor de movimiento */
+  var botonesMov = document.querySelectorAll('.mov button');
+  function ponerMov(m) {
+    raiz.dataset.mov = m;
+    botonesMov.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mov === m)); });
+    guardar('radar-mov', m);
+    if (m === 'cine') { animarHero(); }
+  }
+  botonesMov.forEach(function (b) { b.addEventListener('click', function () { ponerMov(b.dataset.mov); }); });
+
+  /* Aparición al bajar */
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); if (e.target.classList.contains('numero')) contar(); } });
+  }, { rootMargin: '0px 0px -8% 0px' }) : null;
+  document.querySelectorAll('.aparece').forEach(function (el) { io ? io.observe(el) : el.classList.add('visible'); });
+
+  /* Cine: portada con parallax y "En 30 segundos" que se ilumina palabra a palabra */
+  var hero = document.querySelector('.hero');
+  function animarHero() {
+    if (raiz.dataset.mov !== 'cine' || reducido) return;
+    var alto = hero.offsetHeight || 1;
+    var p = Math.min(1, Math.max(0, window.scrollY / alto));
+    hero.style.setProperty('--p', p.toFixed(3));
+    iluminar();
+  }
+  var palabras = [];
+  document.querySelectorAll('.brief .resto').forEach(function (s) {
+    var trozos = s.textContent.split(/(\s+)/);
+    s.textContent = '';
+    trozos.forEach(function (t) {
+      if (!t.trim()) { s.appendChild(document.createTextNode(t)); return; }
+      var sp = document.createElement('span'); sp.className = 'pal'; sp.textContent = t; s.appendChild(sp); palabras.push(sp);
+    });
+  });
+  function iluminar() {
+    var linea = window.innerHeight * 0.72;
+    palabras.forEach(function (w) { w.classList.toggle('on', w.getBoundingClientRect().top < linea); });
+  }
+  var pendiente = false;
+  window.addEventListener('scroll', function () {
+    if (pendiente) return; pendiente = true;
+    requestAnimationFrame(function () { pendiente = false; animarHero(); });
+  }, { passive: true });
+
+  /* Número del día: cuenta desde 0 en modo cine */
+  var contado = false;
+  function contar() {
+    var el = document.querySelector('.cifra');
+    if (!el || contado) return; contado = true;
+    if (raiz.dataset.mov !== 'cine' || reducido) return;
+    var fin = +el.dataset.cifra, t0 = null;
+    function paso(t) {
+      if (!t0) t0 = t;
+      var k = Math.min(1, (t - t0) / 1400), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(fin * e);
+      if (k < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  }
+
+  /* Filtros */
+  var filtros = document.querySelectorAll('.filtros button');
+  filtros.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var cat = b.dataset.cat;
+      filtros.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      document.body.dataset.filtro = cat;
+      document.querySelectorAll('.card').forEach(function (c) { c.hidden = cat !== 'todo' && c.dataset.cat !== cat; });
+      document.querySelectorAll('.grupo').forEach(function (g) { g.hidden = cat !== 'todo' && g.dataset.grupo !== cat; });
+      document.getElementById('feed').scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'start' });
+    });
+  });
+
+  /* Hoja: abrir, cerrar, anterior/siguiente */
+  var hoja = document.getElementById('hoja');
+  var historias = Array.prototype.slice.call(hoja.querySelectorAll('.historia'));
+  var orden = historias.map(function (h) { return h.dataset.id; });
+  var actual = null, origen = null;
+
+  function mostrar(id) {
+    historias.forEach(function (h) { h.hidden = h.dataset.id !== id; h.querySelector('[data-titulo]').id = h.dataset.id === id ? 'hoja-titulo' : ''; });
+    actual = id;
+    var i = orden.indexOf(id);
+    var nav = hoja.querySelector('#h-' + id + ' .historia-nav');
+    nav.children[0].hidden = i === 0;
+    nav.children[1].hidden = i === orden.length - 1;
+    hoja.scrollTop = 0;
+  }
+  function conTransicion(cambio) {
+    if (document.startViewTransition && !reducido) { document.startViewTransition(cambio); } else { cambio(); }
+  }
+  function abrir(id, desde, empujar) {
+    if (orden.indexOf(id) < 0) return;
+    origen = desde || document.querySelector('[data-media="' + id + '"]');
+    var mediaHoja = hoja.querySelector('[data-media-hoja="' + id + '"]');
+    if (origen) origen.style.viewTransitionName = 'foto';
+    conTransicion(function () {
+      if (origen) origen.style.viewTransitionName = '';
+      mostrar(id);
+      mediaHoja.style.viewTransitionName = 'foto';
+      if (!hoja.open) hoja.showModal();
+      raiz.style.overflow = 'hidden';
+    });
+    if (empujar !== false) history.pushState({ hoja: id }, '', '#' + id);
+  }
+  function cerrar(volver) {
+    if (!hoja.open) return;
+    var mediaHoja = hoja.querySelector('[data-media-hoja="' + actual + '"]');
+    var destino = document.querySelector('[data-media="' + actual + '"]');
+    if (destino && destino.offsetParent === null) destino = null;
+    conTransicion(function () {
+      if (mediaHoja) mediaHoja.style.viewTransitionName = '';
+      hoja.close();
+      raiz.style.overflow = '';
+      if (destino) destino.style.viewTransitionName = 'foto';
+    });
+    setTimeout(function () { if (destino) destino.style.viewTransitionName = ''; }, 900);
+    if (volver !== false && history.state && history.state.hoja) history.back();
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-abrir]');
+    if (!a) return;
+    e.preventDefault();
+    var id = a.dataset.abrir;
+    var desde = a.closest('.hero') ? document.getElementById('media-portada') : null;
+    abrir(id, desde);
+  });
+  hoja.querySelector('.cerrar').addEventListener('click', function () { cerrar(); });
+  hoja.addEventListener('cancel', function (e) { e.preventDefault(); cerrar(); });
+  hoja.addEventListener('click', function (e) { if (e.target === hoja) cerrar(); });
+  hoja.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ir]');
+    if (!b) return;
+    var i = orden.indexOf(actual) + (+b.dataset.ir);
+    if (i < 0 || i >= orden.length) return;
+    conTransicion(function () { mostrar(orden[i]); });
+    history.replaceState({ hoja: orden[i] }, '', '#' + orden[i]);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!hoja.open) return;
+    if (e.key === 'ArrowRight') hoja.querySelector('#h-' + actual + ' [data-ir="1"]').click();
+    if (e.key === 'ArrowLeft') hoja.querySelector('#h-' + actual + ' [data-ir="-1"]').click();
+  });
+  window.addEventListener('popstate', function (e) {
+    if (e.state && e.state.hoja) { abrir(e.state.hoja, null, false); } else { cerrar(false); }
+  });
+  /* Enlace directo: /prototipo/#c004 abre esa noticia */
+  var inicial = location.hash.replace('#', '').replace('h-', '');
+  if (orden.indexOf(inicial) >= 0) { history.replaceState({ hoja: inicial }, '', '#' + inicial); mostrar(inicial); hoja.showModal(); raiz.style.overflow = 'hidden'; }
+
+  /* Copiar comandos */
+  document.querySelectorAll('[data-copiar]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var texto = b.getAttribute('data-copiar');
+      var ok = function () { b.textContent = 'Copiado'; setTimeout(function () { b.textContent = 'Copiar'; }, 1600); };
+      var sel = function () { var r = document.createRange(); r.selectNodeContents(b.parentNode.querySelector('code')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Ctrl+C'; };
+      if (navigator.clipboard) navigator.clipboard.writeText(texto).then(ok, sel); else sel();
+    });
+  });
+
+  ponerMov(reducido ? 'sutil' : (leer('radar-mov') || 'sutil'));
+})();
+</script>
+</body>
+</html>
