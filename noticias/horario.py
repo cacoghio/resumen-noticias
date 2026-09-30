@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from .config import DIAS_HISTORIAL, DIAS_VISTOS, DOCS, ZONA
 
-DESDE, HASTA = time(7, 30), time(11, 0)
+DESDE, HASTA = time(8, 0), time(11, 0)
 ESTADO = DOCS / "estado.json"
 HISTORIAL = DOCS / "historial.json"
 

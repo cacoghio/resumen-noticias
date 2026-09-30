@@ -1,0 +1,59 @@
+name: Radar IA diario
+
+on:
+  schedule:
+    # Chile cambia entre UTC-3 (verano) y UTC-4 (invierno): corren las dos y el script
+    # decide según la hora de Chile y si ya se envió hoy (ver noticias/horario.py).
+    - cron: "15 11 * * *"
+    - cron: "15 12 * * *"
+  workflow_dispatch:
+    inputs:
+      forzar:
+        description: "Enviar igual aunque sea fuera de horario o ya se haya enviado hoy"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: radar-ia
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Generar y enviar el Radar IA
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          URL_PAGINAS: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+          PYTHONUTF8: "1"
+          FORZAR: ${{ github.event_name == 'workflow_dispatch' && inputs.forzar && '--forzar' || '' }}
+        run: python resumen.py $FORZAR
+
+      - name: Guardar las páginas y el estado en el repo
+        run: |
+          git config user.name "radar-ia-bot"
+          git config user.email "radar-ia-bot@users.noreply.github.com"
+          git add docs
+          if git diff --cached --quiet; then
+            echo "Sin cambios en docs/"
+          else
+            git commit -m "Radar IA $(date -u +%F)"
+            git pull --rebase
+            git push
+          fi
