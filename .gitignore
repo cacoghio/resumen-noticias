@@ -16,3 +16,5 @@ salida/
 
 # Capturas de referentes de terceros: solo uso local
 diseno/research/capturas/
+diseno/prototipos/vista/
+diseno/prototipos/changelog-*.txt

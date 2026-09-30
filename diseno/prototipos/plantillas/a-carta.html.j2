@@ -1,0 +1,304 @@
+<title>Radar IA Carta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: carta náutica. Cartela (título) arriba; radar-rosa de los vientos + "En 30 segundos" lado a lado en escritorio; fichas en una columna de ~66ch. */
+  :root {
+    --papel: #e6edf0;
+    --papel-2: #d9e4e9;
+    --tinta: #14304c;
+    --tinta-2: #4a5f74;
+    --reticula: rgba(20, 48, 76, .07);
+    --regla: #b5c4cf;
+    --boya: #cf4f1c;
+    --cc: #cf4f1c;
+    --an: #22756b;
+    --cp: #3557a3;
+    --codigo-bg: #14304c;
+    --codigo-fg: #e6edf0;
+    --f-titulo: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --f-etiqueta: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --f-dato: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --papel: #0a1520; --papel-2: #0f1f2c; --tinta: #d3dfe8; --tinta-2: #8ea3b5; --reticula: rgba(211, 223, 232, .05);
+      --regla: #22384b; --boya: #ff7a45; --cc: #ff7a45; --an: #5ec4b6; --cp: #8eaaf2; --codigo-bg: #050c12; --codigo-fg: #d3dfe8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --papel: #0a1520; --papel-2: #0f1f2c; --tinta: #d3dfe8; --tinta-2: #8ea3b5; --reticula: rgba(211, 223, 232, .05);
+    --regla: #22384b; --boya: #ff7a45; --cc: #ff7a45; --an: #5ec4b6; --cp: #8eaaf2; --codigo-bg: #050c12; --codigo-fg: #d3dfe8;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background-color: var(--papel); color: var(--tinta);
+    background-image: linear-gradient(var(--reticula) 1px, transparent 1px), linear-gradient(90deg, var(--reticula) 1px, transparent 1px);
+    background-size: 56px 56px;
+    font-family: var(--f-titulo); font-size: 1.0625rem; line-height: 1.62;
+    font-optical-sizing: auto;
+  }
+  .progreso { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 3px; width: 0; background: var(--boya); z-index: 10; }
+  .hoja { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+  a { color: inherit; text-decoration-color: var(--regla); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--boya); }
+  :focus-visible { outline: 2px solid var(--boya); outline-offset: 2px; }
+  .etq { font-family: var(--f-etiqueta); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; }
+  .dato { font-family: var(--f-dato); font-size: .78rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+
+  /* Cartela */
+  .cartela { border: 1px solid var(--tinta); outline: 1px solid var(--tinta); outline-offset: 4px; padding: 18px 20px; margin: 6px 4px 28px; display: grid; gap: 6px; background: var(--papel); }
+  .cartela .sup { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; color: var(--tinta-2); }
+  .cartela h1 { font-family: var(--f-titulo); font-weight: 700; font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: .95; letter-spacing: -.02em; margin: 6px 0 2px; font-variation-settings: "opsz" 60; }
+  .cartela h1 i { font-weight: 500; color: var(--boya); }
+  .cartela .edicion { font-style: italic; font-size: 1.15rem; color: var(--tinta-2); margin: 0; }
+  .cartela .escala { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--regla); color: var(--tinta-2); }
+  .cartela .escala b { color: var(--tinta); font-weight: 500; }
+
+  /* Portada: 30 segundos + radar */
+  .portada { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  @media (min-width: 860px) { .portada { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 40px; } }
+  .esencial h2, .seccion-cab h2 { margin: 0; }
+  .esencial ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; counter-reset: e; }
+  .esencial li { display: grid; grid-template-columns: 2.4rem 1fr; gap: 10px; align-items: baseline; font-size: 1.14rem; line-height: 1.45; }
+  .esencial li::before { counter-increment: e; content: "0" counter(e); font-family: var(--f-dato); font-size: .85rem; color: var(--boya); border-top: 2px solid var(--boya); padding-top: 4px; }
+  .esencial li b { font-weight: 650; }
+  .esencial li span { color: var(--tinta-2); }
+  .radar-marco { justify-self: center; width: min(100%, 420px); }
+  .radar-marco svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .radar-marco figcaption { display: grid; gap: 6px; justify-items: center; text-align: center; color: var(--tinta-2); margin-top: 8px; }
+  .leyenda-radar { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; color: var(--tinta); }
+  .leyenda-radar span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda-radar i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .rosa-anillo { fill: none; stroke: var(--tinta); stroke-opacity: .35; stroke-width: 1; }
+  .rosa-anillo.ext { stroke-opacity: .8; stroke-width: 1.4; }
+  .rosa-tick { stroke: var(--tinta); stroke-opacity: .6; stroke-width: 1; }
+  .rosa-num { font-family: var(--f-dato); font-size: 7.5px; fill: var(--tinta-2); text-anchor: middle; }
+  .rosa-div { stroke: var(--tinta); stroke-opacity: .5; stroke-dasharray: 2 3; }
+  .rosa-sec { font-family: var(--f-etiqueta); font-weight: 700; font-size: 13px; letter-spacing: .14em; text-anchor: middle; }
+  .rosa-sec.claude_code { fill: var(--cc); } .rosa-sec.anthropic { fill: var(--an); } .rosa-sec.competencia { fill: var(--cp); }
+  .rosa-imp { font-family: var(--f-dato); font-size: 7px; fill: var(--tinta-2); }
+  .blip circle { stroke: var(--papel); stroke-width: 2; }
+  .blip.claude_code circle { fill: var(--cc); } .blip.anthropic circle { fill: var(--an); } .blip.competencia circle { fill: var(--cp); }
+  .blip text { font-family: var(--f-dato); font-size: 8.5px; fill: var(--tinta); font-weight: 500; }
+  .blip:hover circle, .blip:focus-visible circle { stroke: var(--tinta); }
+
+  /* Navegación por sección */
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin: 32px 0 8px; background: var(--papel); border-block: 1px solid var(--tinta); }
+  .nav ul { list-style: none; margin: 0; padding: 0; display: flex; overflow-x: auto; scrollbar-width: none; }
+  .nav a { display: flex; align-items: center; gap: 8px; padding: 12px 14px; text-decoration: none; white-space: nowrap; min-height: 44px; }
+  .nav a .pt { width: 9px; height: 9px; border-radius: 50%; }
+  .nav a .n { font-family: var(--f-dato); color: var(--tinta-2); font-size: .8rem; }
+  .nav li + li a { border-left: 1px solid var(--regla); }
+
+  /* Secciones y fichas */
+  .seccion { padding-top: 28px; scroll-margin-top: 56px; }
+  .seccion-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding-bottom: 8px; border-bottom: 2px solid currentColor; }
+  .seccion-cab h2 { font-family: var(--f-etiqueta); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 1.35rem; }
+  .seccion-cab .dato { color: var(--tinta-2); }
+  .seccion.claude_code .seccion-cab { color: var(--cc); } .seccion.anthropic .seccion-cab { color: var(--an); } .seccion.competencia .seccion-cab { color: var(--cp); }
+  .seccion-cab .dato { color: var(--tinta-2); }
+  .ficha { max-width: 68ch; padding: 22px 0 26px; border-bottom: 1px solid var(--regla); scroll-margin-top: 56px; }
+  .ficha .coord { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; color: var(--tinta-2); }
+  .tag { font-family: var(--f-etiqueta); font-weight: 600; font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; border: 1px solid currentColor; padding: 1px 7px 0; border-radius: 2px; }
+  .tag.boya { color: var(--boya); }
+  .ficha h3 { font-family: var(--f-titulo); font-weight: 650; font-size: clamp(1.4rem, 4.6vw, 1.85rem); line-height: 1.15; letter-spacing: -.01em; margin: 10px 0 8px; text-wrap: balance; font-variation-settings: "opsz" 48; }
+  .ficha.imp3 h3 { font-size: clamp(1.65rem, 6vw, 2.35rem); }
+  .ficha .bajada { font-style: italic; font-size: 1.16rem; line-height: 1.45; color: var(--tinta-2); margin: 0 0 16px; }
+  .ficha h4 { margin: 16px 0 4px; }
+  .claude_code .ficha h4 { color: var(--cc); } .anthropic .ficha h4 { color: var(--an); } .competencia .ficha h4 { color: var(--cp); }
+  .ficha p { margin: 0 0 8px; }
+  .probar { margin-top: 16px; background: var(--codigo-bg); color: var(--codigo-fg); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; }
+  .probar h4 { margin: 0 !important; color: var(--codigo-fg) !important; opacity: .75; }
+  .probar p { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+  .cmd { max-width: 100%; min-width: 0; display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); border-radius: 3px; padding: 6px 6px 6px 12px; min-width: 0; }
+  .cmd code { font-family: var(--f-dato); font-size: .86rem; flex: 1; overflow-x: auto; white-space: nowrap; }
+  .cmd code::before { content: "$ "; opacity: .5; }
+  .copiar { font-family: var(--f-etiqueta); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; background: var(--boya); color: #fff; border: 0; border-radius: 2px; padding: 8px 10px; min-height: 36px; cursor: pointer; }
+  code { font-family: var(--f-dato); font-size: .86em; }
+  .fuentes { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: .95rem; color: var(--tinta-2); }
+  .cobertura { display: inline-flex; gap: 3px; align-items: center; }
+  .cobertura i { width: 7px; height: 7px; border-radius: 50%; background: var(--tinta); opacity: .85; display: block; }
+  .cobertura i.vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-2); opacity: .5; }
+  .fuentes a { color: var(--tinta); }
+
+  /* Release */
+  .release { margin: 14px 0 6px; border: 1px solid var(--regla); background: var(--papel-2); border-radius: 4px; padding: 14px 16px; display: grid; gap: 12px; }
+  .release .cab { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .version { font-family: var(--f-dato); font-weight: 500; background: var(--cc); color: #fff; padding: 3px 10px; border-radius: 999px; font-size: .85rem; }
+  .barra-cambios { display: flex; height: 12px; border-radius: 2px; overflow: hidden; gap: 2px; }
+  .barra-cambios span { display: block; height: 100%; }
+  .k-nuevo { background: var(--cc); } .k-mejora { background: var(--an); } .k-cambio { background: var(--cp); } .k-arreglo { background: var(--tinta-2); }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 10px; height: 10px; border-radius: 2px; display: block; }
+  .destacados { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: .95rem; overflow-wrap: anywhere; }
+  .release > * { min-width: 0; }
+  .destacados li::marker { color: var(--cc); }
+
+  /* Video */
+  .video { display: grid; grid-template-columns: 132px 1fr; gap: 14px; align-items: center; margin: 12px 0 4px; text-decoration: none; }
+  .video .pantalla { aspect-ratio: 16 / 9; max-width: 100%; border-radius: 3px; background: linear-gradient(135deg, var(--cp), var(--tinta)); display: grid; place-items: center; }
+  .video .pantalla svg { width: 30px; height: 30px; }
+  .video .canal { font-size: .95rem; color: var(--tinta-2); }
+
+  /* Pie */
+  .pie { margin-top: 40px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); border-top: 1px solid var(--tinta); padding-top: 18px; color: var(--tinta-2); font-size: .95rem; }
+  .pie h2 { margin: 0 0 6px; color: var(--tinta); }
+  .pie p { margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<div class="progreso" aria-hidden="true"></div>
+<div class="hoja">
+  <header class="cartela">
+    <div class="sup etq"><span>Carta de señales · IA generativa</span><span>Santiago de Chile · 33°27′ S</span></div>
+    <h1>Radar <i>IA</i></h1>
+    <p class="edicion">Edición N.º {{ edicion }} · {{ fecha_larga }}</p>
+    <div class="escala dato">
+      <span><b>{{ total }}</b> señales</span>
+      <span><b>{{ minutos }}</b> min de lectura</span>
+      <span>Generada <b>{{ hora }}</b> CLST · {{ hora_utc }} UTC</span>
+      <span>Fuentes <b>{{ fuentes_revisadas }}</b></span>
+    </div>
+  </header>
+
+  <div class="portada">
+    <section class="esencial" aria-labelledby="t-esencial">
+      <h2 id="t-esencial" class="etq">En 30 segundos</h2>
+      <ol>
+        {% for r in resumen_dia %}<li><div><b>{{ r.lead }}</b> <span>{{ r.resto }}</span></div></li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <figure class="radar-marco" aria-labelledby="t-radar">
+      <svg viewBox="-14 -14 {{ radar.tam + 28 }} {{ radar.tam + 28 }}" role="group" aria-label="Radar del día: {{ total }} señales ubicadas por sección e importancia">
+        {% for a in radar.anillos %}<circle class="rosa-anillo{{ ' ext' if loop.last }}" cx="{{ radar.c }}" cy="{{ radar.c }}" r="{{ a }}"/>{% endfor %}
+        {% for t in radar.ticks %}<line class="rosa-tick" x1="{{ t.x1 }}" y1="{{ t.y1 }}" x2="{{ t.x2 }}" y2="{{ t.y2 }}"/>{% if t.g % 30 == 0 %}<text class="rosa-num" x="{{ t.tx }}" y="{{ t.ty }}">{{ '%03d' % t.g }}</text>{% endif %}{% endfor %}
+        {% for d in radar.divisiones %}<line class="rosa-div" x1="{{ radar.c }}" y1="{{ radar.c }}" x2="{{ d.x }}" y2="{{ d.y }}"/>{% endfor %}
+        <text class="rosa-imp" x="{{ radar.c + 3 }}" y="{{ radar.c - radar.anillos[0] + 9 }}">IMP 3</text>
+        <text class="rosa-imp" x="{{ radar.c + 3 }}" y="{{ radar.c - radar.anillos[1] + 9 }}">IMP 2</text>
+        <text class="rosa-imp" x="{{ radar.c + 3 }}" y="{{ radar.c - radar.anillos[2] + 9 }}">IMP 1</text>
+        <g class="barrido" aria-hidden="true">
+          <path d="M{{ radar.c }} {{ radar.c }} L{{ radar.c }} {{ radar.c - radar.r }} A{{ radar.r }} {{ radar.r }} 0 0 1 {{ radar.c + radar.r * 0.5 }} {{ radar.c - radar.r * 0.866 }} Z" style="fill: var(--boya)" opacity=".10"/>
+          <line x1="{{ radar.c }}" y1="{{ radar.c }}" x2="{{ radar.c + radar.r * 0.5 }}" y2="{{ radar.c - radar.r * 0.866 }}" style="stroke: var(--boya)" stroke-opacity=".55" stroke-width="1.2"/>
+          <animateTransform attributeName="transform" type="rotate" from="0 {{ radar.c }} {{ radar.c }}" to="360 {{ radar.c }} {{ radar.c }}" dur="9s" repeatCount="indefinite"/>
+        </g>
+        {% for e in radar.etiquetas %}<text class="rosa-sec {{ e.seccion }}" x="{{ e.x }}" y="{{ e.y }}">{{ e.codigo }}</text>{% endfor %}
+        {% for p in radar.puntos %}
+        <a class="blip {{ p.seccion }}" href="#{{ p.id }}"><title>{{ p.n }}. {{ p.titular }}</title>
+          <circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ p.r }}"/><text x="{{ p.x + p.r + 3 }}" y="{{ p.y + 3 }}">{{ p.n }}</text></a>
+        {% endfor %}
+        <circle cx="{{ radar.c }}" cy="{{ radar.c }}" r="2.5" style="fill: var(--tinta)"/>
+      </svg>
+      <figcaption id="t-radar">
+        <span class="leyenda-radar etq">{% for s in secciones %}<span><i style="background: var(--{{ s.codigo | lower }})"></i>{{ s.codigo }} {{ s.nombre }}</span>{% endfor %}</span>
+        <span class="dato">Cercanía al centro = importancia · Tamaño = importancia y cobertura</span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <nav class="nav etq" aria-label="Secciones">
+    <ul>
+      {% for s in secciones %}<li><a href="#s-{{ s.clave }}"><span class="pt" style="background: var(--{{ s.codigo | lower }})"></span>{{ s.nombre }} <span class="n">{{ s.notas | length }}</span></a></li>{% endfor %}
+    </ul>
+  </nav>
+
+  {% for s in secciones %}
+  <section class="seccion {{ s.clave }}" id="s-{{ s.clave }}" aria-labelledby="h-{{ s.clave }}">
+    <div class="seccion-cab"><h2 id="h-{{ s.clave }}">{{ s.nombre }}</h2><span class="dato">Sector {{ s.codigo }} · {{ s.notas | length }} señal{{ 'es' if s.notas | length != 1 }}</span></div>
+    {% for it in s.notas %}
+    {% set punto = radar.puntos | selectattr('id', 'equalto', it.id) | first %}
+    <article class="ficha imp{{ it.importancia }}" id="{{ it.id }}">
+      <div class="coord">
+        <span class="dato">{{ it.codigo }} · RUMBO {{ '%03d' % punto.rumbo }}° · IMP {{ it.importancia }}</span>
+        {% if it.es_release %}<span class="tag boya">Release</span>{% endif %}
+        {% if it.es_video %}<span class="tag">Video</span>{% endif %}
+        {% for p in it.personas %}<span class="tag">Voz · {{ p }}</span>{% endfor %}
+      </div>
+      <h3>{{ it.titular }}</h3>
+      <p class="bajada">{{ it.bajada }}</p>
+
+      {% if it.es_release %}
+      <div class="release">
+        <div class="cab"><span class="version">v{{ it.version }}</span><span class="dato">{{ it.cambios.total }} cambios en el changelog oficial</span></div>
+        <div class="barra-cambios" role="img" aria-label="{% for b in it.cambios.barras %}{{ b.n }} {{ b.nombre | lower }}{{ ', ' if not loop.last }}{% endfor %}">
+          {% for b in it.cambios.barras %}<span class="k-{{ b.clave }}" style="width: {{ b.pct }}%"></span>{% endfor %}
+        </div>
+        <div class="leyenda dato">{% for b in it.cambios.barras %}<span><i class="k-{{ b.clave }}"></i>{{ b.n }} {{ b.nombre | lower }}</span>{% endfor %}</div>
+        <div><h4 class="etq" style="margin-top:0">Lo nuevo</h4>
+          <ul class="destacados">{% for d in it.cambios.destacados %}<li>{{ d | codigo }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if it.es_video %}
+      <a class="video" href="{{ it.fuentes[0].link }}" rel="noopener" target="_blank">
+        <span class="pantalla" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,255,255,.18)"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg></span>
+        <span><span class="etq">Ver en YouTube</span><br><span class="canal">{{ it.personas[0] }} · análisis en español</span></span>
+      </a>
+      {% endif %}
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>{{ it.que_paso }}</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>{{ it.por_que_importa }}</p>
+
+      {% if it.que_probar %}
+      <div class="probar">
+        <h4 class="etq">Qué probar hoy</h4>
+        <p>{{ it.que_probar }}</p>
+        {% for c in it.comandos %}<div class="cmd"><code>{{ c }}</code><button class="copiar" type="button" data-copiar="{{ c }}">Copiar</button></div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="fuentes">
+        <span class="cobertura" title="{{ it.cobertura }} medios">{% for i in range(8) %}<i class="{{ '' if i < it.cobertura else 'vacio' }}"></i>{% endfor %}</span>
+        <span class="dato">{{ it.cobertura }} medio{{ 's' if it.cobertura != 1 }}</span>
+        <span>{% for f in it.fuentes[:4] %}<a href="{{ f.link }}" rel="noopener" target="_blank">{{ f.medio }}</a>{{ ' · ' if not loop.last }}{% endfor %}</span>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+
+  <footer class="pie">
+    <div><h2 class="etq">Cómo se hizo esta carta</h2><p>{{ fuentes_revisadas }} fuentes revisadas a las {{ hora }}. No respondió: {{ fuentes_caidas | join(', ') }}. Selección y análisis con {{ modelo }}. Revisa siempre las fuentes.</p></div>
+    <div><h2 class="etq">Próxima edición</h2><p>Mañana a las 08:30. <a href="#">Ver cartas anteriores</a></p></div>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var barra = document.querySelector('.progreso');
+    function avance() {
+      var h = document.documentElement;
+      var total = h.scrollHeight - h.clientHeight;
+      barra.style.width = (total > 0 ? (h.scrollTop / total) * 100 : 0) + '%';
+    }
+    document.addEventListener('scroll', avance, { passive: true });
+    avance();
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('animateTransform').forEach(function (a) { a.remove(); });
+    }
+    document.querySelectorAll('[data-copiar]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var texto = b.getAttribute('data-copiar');
+        function ok() { b.textContent = 'Copiado'; setTimeout(function () { b.textContent = 'Copiar'; }, 1600); }
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(texto).then(ok, function () { seleccionar(b); });
+        } else { seleccionar(b); }
+      });
+    });
+    function seleccionar(b) {
+      var code = b.parentNode.querySelector('code');
+      var r = document.createRange(); r.selectNodeContents(code);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = 'Ctrl+C';
+    }
+  })();
+</script>

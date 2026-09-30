@@ -1,0 +1,508 @@
+<title>Radar IA Carta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: carta náutica. Cartela (título) arriba; radar-rosa de los vientos + "En 30 segundos" lado a lado en escritorio; fichas en una columna de ~66ch. */
+  :root {
+    --papel: #e6edf0;
+    --papel-2: #d9e4e9;
+    --tinta: #14304c;
+    --tinta-2: #4a5f74;
+    --reticula: rgba(20, 48, 76, .07);
+    --regla: #b5c4cf;
+    --boya: #cf4f1c;
+    --cc: #cf4f1c;
+    --an: #22756b;
+    --cp: #3557a3;
+    --codigo-bg: #14304c;
+    --codigo-fg: #e6edf0;
+    --f-titulo: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --f-etiqueta: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --f-dato: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --papel: #0a1520; --papel-2: #0f1f2c; --tinta: #d3dfe8; --tinta-2: #8ea3b5; --reticula: rgba(211, 223, 232, .05);
+      --regla: #22384b; --boya: #ff7a45; --cc: #ff7a45; --an: #5ec4b6; --cp: #8eaaf2; --codigo-bg: #050c12; --codigo-fg: #d3dfe8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --papel: #0a1520; --papel-2: #0f1f2c; --tinta: #d3dfe8; --tinta-2: #8ea3b5; --reticula: rgba(211, 223, 232, .05);
+    --regla: #22384b; --boya: #ff7a45; --cc: #ff7a45; --an: #5ec4b6; --cp: #8eaaf2; --codigo-bg: #050c12; --codigo-fg: #d3dfe8;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background-color: var(--papel); color: var(--tinta);
+    background-image: linear-gradient(var(--reticula) 1px, transparent 1px), linear-gradient(90deg, var(--reticula) 1px, transparent 1px);
+    background-size: 56px 56px;
+    font-family: var(--f-titulo); font-size: 1.0625rem; line-height: 1.62;
+    font-optical-sizing: auto;
+  }
+  .progreso { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 3px; width: 0; background: var(--boya); z-index: 10; }
+  .hoja { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+  a { color: inherit; text-decoration-color: var(--regla); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--boya); }
+  :focus-visible { outline: 2px solid var(--boya); outline-offset: 2px; }
+  .etq { font-family: var(--f-etiqueta); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; }
+  .dato { font-family: var(--f-dato); font-size: .78rem; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+
+  /* Cartela */
+  .cartela { border: 1px solid var(--tinta); outline: 1px solid var(--tinta); outline-offset: 4px; padding: 18px 20px; margin: 6px 4px 28px; display: grid; gap: 6px; background: var(--papel); }
+  .cartela .sup { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; color: var(--tinta-2); }
+  .cartela h1 { font-family: var(--f-titulo); font-weight: 700; font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: .95; letter-spacing: -.02em; margin: 6px 0 2px; font-variation-settings: "opsz" 60; }
+  .cartela h1 i { font-weight: 500; color: var(--boya); }
+  .cartela .edicion { font-style: italic; font-size: 1.15rem; color: var(--tinta-2); margin: 0; }
+  .cartela .escala { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-top: 10px; margin-top: 6px; border-top: 1px solid var(--regla); color: var(--tinta-2); }
+  .cartela .escala b { color: var(--tinta); font-weight: 500; }
+
+  /* Portada: 30 segundos + radar */
+  .portada { display: grid; gap: 28px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  @media (min-width: 860px) { .portada { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 40px; } }
+  .esencial h2, .seccion-cab h2 { margin: 0; }
+  .esencial ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; counter-reset: e; }
+  .esencial li { display: grid; grid-template-columns: 2.4rem 1fr; gap: 10px; align-items: baseline; font-size: 1.14rem; line-height: 1.45; }
+  .esencial li::before { counter-increment: e; content: "0" counter(e); font-family: var(--f-dato); font-size: .85rem; color: var(--boya); border-top: 2px solid var(--boya); padding-top: 4px; }
+  .esencial li b { font-weight: 650; }
+  .esencial li span { color: var(--tinta-2); }
+  .radar-marco { justify-self: center; width: min(100%, 420px); }
+  .radar-marco svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .radar-marco figcaption { display: grid; gap: 6px; justify-items: center; text-align: center; color: var(--tinta-2); margin-top: 8px; }
+  .leyenda-radar { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; color: var(--tinta); }
+  .leyenda-radar span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda-radar i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .rosa-anillo { fill: none; stroke: var(--tinta); stroke-opacity: .35; stroke-width: 1; }
+  .rosa-anillo.ext { stroke-opacity: .8; stroke-width: 1.4; }
+  .rosa-tick { stroke: var(--tinta); stroke-opacity: .6; stroke-width: 1; }
+  .rosa-num { font-family: var(--f-dato); font-size: 7.5px; fill: var(--tinta-2); text-anchor: middle; }
+  .rosa-div { stroke: var(--tinta); stroke-opacity: .5; stroke-dasharray: 2 3; }
+  .rosa-sec { font-family: var(--f-etiqueta); font-weight: 700; font-size: 13px; letter-spacing: .14em; text-anchor: middle; }
+  .rosa-sec.claude_code { fill: var(--cc); } .rosa-sec.anthropic { fill: var(--an); } .rosa-sec.competencia { fill: var(--cp); }
+  .rosa-imp { font-family: var(--f-dato); font-size: 7px; fill: var(--tinta-2); }
+  .blip circle { stroke: var(--papel); stroke-width: 2; }
+  .blip.claude_code circle { fill: var(--cc); } .blip.anthropic circle { fill: var(--an); } .blip.competencia circle { fill: var(--cp); }
+  .blip text { font-family: var(--f-dato); font-size: 8.5px; fill: var(--tinta); font-weight: 500; }
+  .blip:hover circle, .blip:focus-visible circle { stroke: var(--tinta); }
+
+  /* Navegación por sección */
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin: 32px 0 8px; background: var(--papel); border-block: 1px solid var(--tinta); }
+  .nav ul { list-style: none; margin: 0; padding: 0; display: flex; overflow-x: auto; scrollbar-width: none; }
+  .nav a { display: flex; align-items: center; gap: 8px; padding: 12px 14px; text-decoration: none; white-space: nowrap; min-height: 44px; }
+  .nav a .pt { width: 9px; height: 9px; border-radius: 50%; }
+  .nav a .n { font-family: var(--f-dato); color: var(--tinta-2); font-size: .8rem; }
+  .nav li + li a { border-left: 1px solid var(--regla); }
+
+  /* Secciones y fichas */
+  .seccion { padding-top: 28px; scroll-margin-top: 56px; }
+  .seccion-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding-bottom: 8px; border-bottom: 2px solid currentColor; }
+  .seccion-cab h2 { font-family: var(--f-etiqueta); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 1.35rem; }
+  .seccion-cab .dato { color: var(--tinta-2); }
+  .seccion.claude_code .seccion-cab { color: var(--cc); } .seccion.anthropic .seccion-cab { color: var(--an); } .seccion.competencia .seccion-cab { color: var(--cp); }
+  .seccion-cab .dato { color: var(--tinta-2); }
+  .ficha { max-width: 68ch; padding: 22px 0 26px; border-bottom: 1px solid var(--regla); scroll-margin-top: 56px; }
+  .ficha .coord { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; color: var(--tinta-2); }
+  .tag { font-family: var(--f-etiqueta); font-weight: 600; font-size: .74rem; text-transform: uppercase; letter-spacing: .1em; border: 1px solid currentColor; padding: 1px 7px 0; border-radius: 2px; }
+  .tag.boya { color: var(--boya); }
+  .ficha h3 { font-family: var(--f-titulo); font-weight: 650; font-size: clamp(1.4rem, 4.6vw, 1.85rem); line-height: 1.15; letter-spacing: -.01em; margin: 10px 0 8px; text-wrap: balance; font-variation-settings: "opsz" 48; }
+  .ficha.imp3 h3 { font-size: clamp(1.65rem, 6vw, 2.35rem); }
+  .ficha .bajada { font-style: italic; font-size: 1.16rem; line-height: 1.45; color: var(--tinta-2); margin: 0 0 16px; }
+  .ficha h4 { margin: 16px 0 4px; }
+  .claude_code .ficha h4 { color: var(--cc); } .anthropic .ficha h4 { color: var(--an); } .competencia .ficha h4 { color: var(--cp); }
+  .ficha p { margin: 0 0 8px; }
+  .probar { margin-top: 16px; background: var(--codigo-bg); color: var(--codigo-fg); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; }
+  .probar h4 { margin: 0 !important; color: var(--codigo-fg) !important; opacity: .75; }
+  .probar p { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+  .cmd { max-width: 100%; min-width: 0; display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); border-radius: 3px; padding: 6px 6px 6px 12px; min-width: 0; }
+  .cmd code { font-family: var(--f-dato); font-size: .86rem; flex: 1; overflow-x: auto; white-space: nowrap; }
+  .cmd code::before { content: "$ "; opacity: .5; }
+  .copiar { font-family: var(--f-etiqueta); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; background: var(--boya); color: #fff; border: 0; border-radius: 2px; padding: 8px 10px; min-height: 36px; cursor: pointer; }
+  code { font-family: var(--f-dato); font-size: .86em; }
+  .fuentes { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: .95rem; color: var(--tinta-2); }
+  .cobertura { display: inline-flex; gap: 3px; align-items: center; }
+  .cobertura i { width: 7px; height: 7px; border-radius: 50%; background: var(--tinta); opacity: .85; display: block; }
+  .cobertura i.vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-2); opacity: .5; }
+  .fuentes a { color: var(--tinta); }
+
+  /* Release */
+  .release { margin: 14px 0 6px; border: 1px solid var(--regla); background: var(--papel-2); border-radius: 4px; padding: 14px 16px; display: grid; gap: 12px; }
+  .release .cab { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .version { font-family: var(--f-dato); font-weight: 500; background: var(--cc); color: #fff; padding: 3px 10px; border-radius: 999px; font-size: .85rem; }
+  .barra-cambios { display: flex; height: 12px; border-radius: 2px; overflow: hidden; gap: 2px; }
+  .barra-cambios span { display: block; height: 100%; }
+  .k-nuevo { background: var(--cc); } .k-mejora { background: var(--an); } .k-cambio { background: var(--cp); } .k-arreglo { background: var(--tinta-2); }
+  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 10px; height: 10px; border-radius: 2px; display: block; }
+  .destacados { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: .95rem; overflow-wrap: anywhere; }
+  .release > * { min-width: 0; }
+  .destacados li::marker { color: var(--cc); }
+
+  /* Video */
+  .video { display: grid; grid-template-columns: 132px 1fr; gap: 14px; align-items: center; margin: 12px 0 4px; text-decoration: none; }
+  .video .pantalla { aspect-ratio: 16 / 9; max-width: 100%; border-radius: 3px; background: linear-gradient(135deg, var(--cp), var(--tinta)); display: grid; place-items: center; }
+  .video .pantalla svg { width: 30px; height: 30px; }
+  .video .canal { font-size: .95rem; color: var(--tinta-2); }
+
+  /* Pie */
+  .pie { margin-top: 40px; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); border-top: 1px solid var(--tinta); padding-top: 18px; color: var(--tinta-2); font-size: .95rem; }
+  .pie h2 { margin: 0 0 6px; color: var(--tinta); }
+  .pie p { margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<div class="progreso" aria-hidden="true"></div>
+<div class="hoja">
+  <header class="cartela">
+    <div class="sup etq"><span>Carta de señales · IA generativa</span><span>Santiago de Chile · 33°27′ S</span></div>
+    <h1>Radar <i>IA</i></h1>
+    <p class="edicion">Edición N.º 1 · Miércoles 30 de septiembre de 2026</p>
+    <div class="escala dato">
+      <span><b>7</b> señales</span>
+      <span><b>5</b> min de lectura</span>
+      <span>Generada <b>08:21</b> CLST · 11:21 UTC</span>
+      <span>Fuentes <b>18</b></span>
+    </div>
+  </header>
+
+  <div class="portada">
+    <section class="esencial" aria-labelledby="t-esencial">
+      <h2 id="t-esencial" class="etq">En 30 segundos</h2>
+      <ol>
+        <li><div><b>Claude Code 2.1.285</b> <span>suma claude --desktop, un interruptor para apagar WebFetch y opciones de plugins configurables.</span></div></li>
+        <li><div><b>Anthropic avisa &#34;riesgo existencial&#34;</b> <span>en su prospecto de salida a bolsa, y Dario Amodei llevó el mismo mensaje a la Casa Blanca.</span></div></li>
+        <li><div><b>OpenAI lanza Dots y GPT-6.1 Sol</b> <span>en su DevDay, pero frena GPT-6.1 Astra por problemas de seguridad.</span></div></li>
+        
+      </ol>
+    </section>
+
+    <figure class="radar-marco" aria-labelledby="t-radar">
+      <svg viewBox="-14 -14 348 348" role="group" aria-label="Radar del día: 7 señales ubicadas por sección e importancia">
+        <circle class="rosa-anillo" cx="160.0" cy="160.0" r="42.6"/><circle class="rosa-anillo" cx="160.0" cy="160.0" r="79.5"/><circle class="rosa-anillo" cx="160.0" cy="160.0" r="113.6"/><circle class="rosa-anillo ext" cx="160.0" cy="160.0" r="142.0"/>
+        <line class="rosa-tick" x1="160.0" y1="18.0" x2="160.0" y2="28.0"/><text class="rosa-num" x="160.0" y="10.0">000</text><line class="rosa-tick" x1="184.7" y1="20.2" x2="183.8" y2="25.1"/><line class="rosa-tick" x1="208.6" y1="26.6" x2="206.9" y2="31.3"/><line class="rosa-tick" x1="231.0" y1="37.0" x2="226.0" y2="45.7"/><text class="rosa-num" x="236.5" y="30.5">030</text><line class="rosa-tick" x1="251.3" y1="51.2" x2="248.1" y2="55.1"/><line class="rosa-tick" x1="268.8" y1="68.7" x2="264.9" y2="71.9"/><line class="rosa-tick" x1="283.0" y1="89.0" x2="274.3" y2="94.0"/><text class="rosa-num" x="292.5" y="86.5">060</text><line class="rosa-tick" x1="293.4" y1="111.4" x2="288.7" y2="113.1"/><line class="rosa-tick" x1="299.8" y1="135.3" x2="294.9" y2="136.2"/><line class="rosa-tick" x1="302.0" y1="160.0" x2="292.0" y2="160.0"/><text class="rosa-num" x="313.0" y="163.0">090</text><line class="rosa-tick" x1="299.8" y1="184.7" x2="294.9" y2="183.8"/><line class="rosa-tick" x1="293.4" y1="208.6" x2="288.7" y2="206.9"/><line class="rosa-tick" x1="283.0" y1="231.0" x2="274.3" y2="226.0"/><text class="rosa-num" x="292.5" y="239.5">120</text><line class="rosa-tick" x1="268.8" y1="251.3" x2="264.9" y2="248.1"/><line class="rosa-tick" x1="251.3" y1="268.8" x2="248.1" y2="264.9"/><line class="rosa-tick" x1="231.0" y1="283.0" x2="226.0" y2="274.3"/><text class="rosa-num" x="236.5" y="295.5">150</text><line class="rosa-tick" x1="208.6" y1="293.4" x2="206.9" y2="288.7"/><line class="rosa-tick" x1="184.7" y1="299.8" x2="183.8" y2="294.9"/><line class="rosa-tick" x1="160.0" y1="302.0" x2="160.0" y2="292.0"/><text class="rosa-num" x="160.0" y="316.0">180</text><line class="rosa-tick" x1="135.3" y1="299.8" x2="136.2" y2="294.9"/><line class="rosa-tick" x1="111.4" y1="293.4" x2="113.1" y2="288.7"/><line class="rosa-tick" x1="89.0" y1="283.0" x2="94.0" y2="274.3"/><text class="rosa-num" x="83.5" y="295.5">210</text><line class="rosa-tick" x1="68.7" y1="268.8" x2="71.9" y2="264.9"/><line class="rosa-tick" x1="51.2" y1="251.3" x2="55.1" y2="248.1"/><line class="rosa-tick" x1="37.0" y1="231.0" x2="45.7" y2="226.0"/><text class="rosa-num" x="27.5" y="239.5">240</text><line class="rosa-tick" x1="26.6" y1="208.6" x2="31.3" y2="206.9"/><line class="rosa-tick" x1="20.2" y1="184.7" x2="25.1" y2="183.8"/><line class="rosa-tick" x1="18.0" y1="160.0" x2="28.0" y2="160.0"/><text class="rosa-num" x="7.0" y="163.0">270</text><line class="rosa-tick" x1="20.2" y1="135.3" x2="25.1" y2="136.2"/><line class="rosa-tick" x1="26.6" y1="111.4" x2="31.3" y2="113.1"/><line class="rosa-tick" x1="37.0" y1="89.0" x2="45.7" y2="94.0"/><text class="rosa-num" x="27.5" y="86.5">300</text><line class="rosa-tick" x1="51.2" y1="68.7" x2="55.1" y2="71.9"/><line class="rosa-tick" x1="68.7" y1="51.2" x2="71.9" y2="55.1"/><line class="rosa-tick" x1="89.0" y1="37.0" x2="94.0" y2="45.7"/><text class="rosa-num" x="83.5" y="30.5">330</text><line class="rosa-tick" x1="111.4" y1="26.6" x2="113.1" y2="31.3"/><line class="rosa-tick" x1="135.3" y1="20.2" x2="136.2" y2="25.1"/>
+        <line class="rosa-div" x1="160.0" y1="160.0" x2="283.0" y2="89.0"/><line class="rosa-div" x1="160.0" y1="160.0" x2="160.0" y2="302.0"/><line class="rosa-div" x1="160.0" y1="160.0" x2="37.0" y2="89.0"/>
+        <text class="rosa-imp" x="163.0" y="126.4">IMP 3</text>
+        <text class="rosa-imp" x="163.0" y="89.5">IMP 2</text>
+        <text class="rosa-imp" x="163.0" y="55.400000000000006">IMP 1</text>
+        <g class="barrido" aria-hidden="true">
+          <path d="M160.0 160.0 L160.0 18.0 A142.0 142.0 0 0 1 231.0 37.028000000000006 Z" style="fill: var(--boya)" opacity=".10"/>
+          <line x1="160.0" y1="160.0" x2="231.0" y2="37.028000000000006" style="stroke: var(--boya)" stroke-opacity=".55" stroke-width="1.2"/>
+          <animateTransform attributeName="transform" type="rotate" from="0 160.0 160.0" to="360 160.0 160.0" dur="9s" repeatCount="indefinite"/>
+        </g>
+        <text class="rosa-sec claude_code" x="160.0" y="35.2">CC</text><text class="rosa-sec anthropic" x="270.7" y="226.9">AN</text><text class="rosa-sec competencia" x="49.3" y="226.9">CP</text>
+        
+        <a class="blip claude_code" href="#c001"><title>1. Claude Code 2.1.285 permite desactivar búsquedas web y abre la app de escritorio desde la terminal</title>
+          <circle cx="160.0" cy="117.4" r="9.9"/><text x="172.9" y="120.4">1</text></a>
+        
+        <a class="blip anthropic" href="#c003"><title>2. Anthropic advierte sobre &#34;riesgos existenciales para la humanidad&#34; en su folleto de salida a la bolsa</title>
+          <circle cx="239.2" cy="166.9" r="9.5"/><text x="251.7" y="169.9">2</text></a>
+        
+        <a class="blip anthropic" href="#c009"><title>3. Dario Amodei se reúne con Donald Trump y advierte sobre los riesgos reales de la IA</title>
+          <circle cx="237.5" cy="204.7" r="8.1"/><text x="248.6" y="207.7">3</text></a>
+        
+        <a class="blip anthropic" href="#c013"><title>4. Anthropic contrata a veterano de Google Project Zero y evalúa capacidades de hackeo en sus modelos</title>
+          <circle cx="205.6" cy="225.1" r="7.9"/><text x="216.5" y="228.1">4</text></a>
+        
+        <a class="blip competencia" href="#c004"><title>5. Sam Altman presenta Dots, el nuevo agente de IA personal y autónomo de OpenAI</title>
+          <circle cx="135.6" cy="194.9" r="11.5"/><text x="150.1" y="197.9">5</text></a>
+        
+        <a class="blip competencia" href="#c008"><title>6. OpenAI presenta GPT-6.1 Sol en el Dev Day y pausa el lanzamiento de GPT-6.1 Astra por seguridad</title>
+          <circle cx="82.5" cy="204.7" r="8.1"/><text x="93.6" y="207.7">6</text></a>
+        
+        <a class="blip competencia" href="#c104"><title>7. Benjamín Cordero analiza las claves del DevDay de OpenAI y los detalles de Dots y Codex</title>
+          <circle cx="80.8" cy="166.9" r="7.7"/><text x="91.5" y="169.9">7</text></a>
+        
+        <circle cx="160.0" cy="160.0" r="2.5" style="fill: var(--tinta)"/>
+      </svg>
+      <figcaption id="t-radar">
+        <span class="leyenda-radar etq"><span><i style="background: var(--cc)"></i>CC Claude Code</span><span><i style="background: var(--an)"></i>AN Anthropic y Claude</span><span><i style="background: var(--cp)"></i>CP Competencia</span></span>
+        <span class="dato">Cercanía al centro = importancia · Tamaño = importancia y cobertura</span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <nav class="nav etq" aria-label="Secciones">
+    <ul>
+      <li><a href="#s-claude_code"><span class="pt" style="background: var(--cc)"></span>Claude Code <span class="n">1</span></a></li><li><a href="#s-anthropic"><span class="pt" style="background: var(--an)"></span>Anthropic y Claude <span class="n">3</span></a></li><li><a href="#s-competencia"><span class="pt" style="background: var(--cp)"></span>Competencia <span class="n">3</span></a></li>
+    </ul>
+  </nav>
+
+  
+  <section class="seccion claude_code" id="s-claude_code" aria-labelledby="h-claude_code">
+    <div class="seccion-cab"><h2 id="h-claude_code">Claude Code</h2><span class="dato">Sector CC · 1 señal</span></div>
+    
+    
+    <article class="ficha imp3" id="c001">
+      <div class="coord">
+        <span class="dato">CC-01 · RUMBO 000° · IMP 3</span>
+        <span class="tag boya">Release</span>
+        
+        
+      </div>
+      <h3>Claude Code 2.1.285 permite desactivar búsquedas web y abre la app de escritorio desde la terminal</h3>
+      <p class="bajada">La nueva actualización de Claude Code introduce variables de entorno clave, mejoras en la configuración de plugins y mayor control para administradores.</p>
+
+      
+      <div class="release">
+        <div class="cab"><span class="version">v2.1.285</span><span class="dato">136 cambios en el changelog oficial</span></div>
+        <div class="barra-cambios" role="img" aria-label="10 nuevo, 17 mejorado, 23 cambiado, 86 arreglado">
+          <span class="k-nuevo" style="width: 7.4%"></span><span class="k-mejora" style="width: 12.5%"></span><span class="k-cambio" style="width: 16.9%"></span><span class="k-arreglo" style="width: 63.2%"></span>
+        </div>
+        <div class="leyenda dato"><span><i class="k-nuevo"></i>10 nuevo</span><span><i class="k-mejora"></i>17 mejorado</span><span><i class="k-cambio"></i>23 cambiado</span><span><i class="k-arreglo"></i>86 arreglado</span></div>
+        <div><h4 class="etq" style="margin-top:0">Lo nuevo</h4>
+          <ul class="destacados"><li><code>CLAUDE_CODE_DISABLE_WEB_FETCH</code> environment variable to turn off the WebFetch tool</li><li><code>claude --desktop</code> to open the Claude desktop app on the current directory, or on a session with <code>--continue</code> / <code>--resume &lt;id&gt;</code></li><li><code>claude plugin configure &lt;plugin&gt;</code> to show a plugin&#39;s options and which are unset, or save new values read from stdin with <code>--values-stdin</code></li><li><code>&lt;server&gt;.&lt;key&gt;=&lt;value&gt;</code> to <code>claude plugin install --config</code>, so a bundled <code>.mcpb</code> MCP server&#39;s own settings can be set at install time and it starts without visiting <code>/plugin</code> → Configure</li><li><code>allowedProviders</code> managed setting to limit which API providers a machine may use (Anthropic API, a custom endpoint, Bedrock, Mantle, Vertex AI, Foundry, Claude Platform on AWS, or a Cloud gateway)</li><li><code>CLAUDE_CODE_NONSTREAMING_TIMEOUT_RETRIES</code> environment variable to cap re-sends of a non-streaming fallback request that timed out</li></ul>
+        </div>
+      </div>
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>Anthropic lanzó Claude Code 2.1.285. Entre las novedades destaca la variable de entorno CLAUDE_CODE_DISABLE_WEB_FETCH para desactivar la herramienta WebFetch, y el comando claude --desktop para abrir la app de escritorio en el directorio actual o continuar una sesión. También se añade claude plugin configure &lt;plugin&gt; para ver y guardar opciones de plugins, la opción de configurar servidores MCP empaquetados durante la instalación, y el ajuste administrado allowedProviders para restringir los proveedores de API permitidos en una máquina. Se corrigieron errores en subagentes con CLAUDE_CODE_FORK_SUBAGENT=1, descargas fallidas en Remote Control y problemas de SSH.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Te da mucho más control sobre la privacidad y seguridad de tu entorno de desarrollo, permitiendo bloquear el acceso web y restringir qué proveedores de API se usan en entornos corporativos. Además, facilita la transición entre la terminal y la app de escritorio.</p>
+
+      
+      <div class="probar">
+        <h4 class="etq">Qué probar hoy</h4>
+        <p>Prueba desactivar WebFetch con export CLAUDE_CODE_DISABLE_WEB_FETCH=true o abre la app de escritorio en tu directorio actual usando claude --desktop.</p>
+        <div class="cmd"><code>export CLAUDE_CODE_DISABLE_WEB_FETCH=true</code><button class="copiar" type="button" data-copiar="export CLAUDE_CODE_DISABLE_WEB_FETCH=true">Copiar</button></div><div class="cmd"><code>claude --desktop</code><button class="copiar" type="button" data-copiar="claude --desktop">Copiar</button></div>
+      </div>
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="2 medios"><i class=""></i><i class=""></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i></span>
+        <span class="dato">2 medios</span>
+        <span><a href="https://github.com/anthropics/claude-code/releases/tag/v2.1.285" rel="noopener" target="_blank">Claude Code</a> · <a href="https://news.google.com/rss/articles/CBMiigFBVV95cUxQbWI0TFRvWUt6MUo4bnZxQmZaQ2t4NGFUTVJXQTdYRDdoTXNubEJnM3M0YW5EZXk1VWFjYmRQYnVub1R6SlBTekZCcERyaXl6ZGxON0FhejcxTnNGNUFGXy1BcnRDQ0VxZkQ5UEozRE80emhfVlY3cDMxbUNuRm1HSE5NME9yYXpvR1E?oc=5" rel="noopener" target="_blank">MIXED Reality News</a></span>
+      </div>
+    </article>
+    
+  </section>
+  
+  <section class="seccion anthropic" id="s-anthropic" aria-labelledby="h-anthropic">
+    <div class="seccion-cab"><h2 id="h-anthropic">Anthropic y Claude</h2><span class="dato">Sector AN · 3 señales</span></div>
+    
+    
+    <article class="ficha imp2" id="c003">
+      <div class="coord">
+        <span class="dato">AN-02 · RUMBO 095° · IMP 2</span>
+        
+        
+        
+      </div>
+      <h3>Anthropic advierte sobre &#34;riesgos existenciales para la humanidad&#34; en su folleto de salida a la bolsa</h3>
+      <p class="bajada">La startup de inteligencia artificial incluyó una inusual advertencia de seguridad global en los documentos financieros para sus futuros inversionistas.</p>
+
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>Anthropic, la creadora de Claude, incluyó una advertencia explícita en su prospecto de salida a la bolsa (IPO), señalando que el desarrollo de la inteligencia artificial podría representar un &#34;riesgo existencial para la humanidad&#34;. Este tipo de advertencias regulatorias suele enfocarse en riesgos financieros o de competencia, pero la firma decidió transparentar los peligros potenciales de seguridad y control asociados a modelos de frontera altamente avanzados, reflejando su filosofía de desarrollo seguro y alineación de IA.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Muestra que Anthropic mantiene su enfoque de seguridad extrema incluso bajo la presión de salir al mercado financiero, lo que podría influir en cómo los inversionistas y reguladores evalúan el futuro de la IA generativa.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="14 medios"><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span>
+        <span class="dato">14 medios</span>
+        <span><a href="https://news.google.com/rss/articles/CBMi6AFBVV95cUxQNjlyOVlxWHVyS1d0X0xGdlhid0JHRlFTVk5ac0NiNmlDV1NYLUxabVlfdG5hZzlqUFhabGRPT05pcFJLSXdOUm1rcVYycFY1Zkk3cUZ1b0FQSzEwLXBIMjRONElQdkYyTlBuRGxCVTF4bm1HVUt0eE1sRlk3bnUyeFNXZVA2SjBmUkJGOFpRRl94dFlrcHJDbTlnd0ZtbkJNdmpSX0tWd3VLWW1MczRRdlJvMzlSdnVWeTFycGVoZXBpRXBGbDJ1MU83eEJQWmlBQmktWTlRaFN6MGhGNVVZdnhVSURycHhI0gHuAUFVX3lxTE1jMXhEdmwwODZWX0FRaGQ0eHNSOUIxdGw4SDBYVDJGcEdkWk9ONjVyVzNDMHZvdjYxSGlrMWhNS2xMQVdmNXFpbXMzMGtZN3FSTnZqdWlab3R2dEJQcnR0UGd2Ym1manYzYXp3N3g3QWZJMllaYVNGeE9ONW9CVmNDRVRmQnphWi15djhjYm5OUUVFMFFJUHQtVUpvUjRZekdwZFpOalNoS09EaGh5b3ljLXNWNXVSSWRTTi0tdDBmUmtlTHJKQUM1TUlPcDNiODNVSnd3ZkdiVDNQcW1BUkJPRmFjOWZoUS1HXy1YSVE?oc=5" rel="noopener" target="_blank">The Clinic</a> · <a href="https://news.google.com/rss/articles/CBMibkFVX3lxTE5QOGs2ZTIzM1pZSm80U0lQUThBU0JnUlR0UkExVl9uaER0TEJvdWEyU2RFX1kybGx4dnRpQkFrUGlqdGNabnhzVEVCb3ozWFNINzB3WVVpU1lhYWh1VFl3bm9aT1J1eWRlVUJnbWJn?oc=5" rel="noopener" target="_blank">culturageek.com.ar</a> · <a href="https://news.google.com/rss/articles/CBMirwFBVV95cUxQMFhhT1FRV3ZZSTBVeXY5dU1JaWRHRUVsR1drMm1wNnB5LXl6UWNEVTJjMTM2aHpuVkJydG5oelZvZUV4QXJybUhmekNGSmRQdUdmdFlCc3phUHRGUjlUZDIwcGZCNVJKUUx2OW0wdFgzRTFMYm1fSFlDU2VydHlsUFRvQ3FOVndvV2lQNkJhSUM2Rk96dG5pdGQxeWR5VGMxLWJlM1puQkYwQVdvTmRn0gGvAUFVX3lxTE5SNXNjRm13UVN3Z004WmZjaV80RWVRTXJlNUZ2UldEWUFyQjBlWWplSXdyLXZwdkZxM3FIQ3lzRUx6RkEzTG05WDB5TmhmZmtVZVpSaTViWnI1YjNUU3NnMlV3Um1oTFlfQkFKQ1diM1dCSnBrckxIUUxaN3d0NWlCcHNobmdGMlRydXI1ellEZFZfT2FVZGk4S2J0elhaQ1ZBTEtnNzZkOTVxbG5zb0E?oc=5" rel="noopener" target="_blank">La FM</a> · <a href="https://news.google.com/rss/articles/CBMi3wFBVV95cUxNLW82WFM1T1JfQWpGcU9TS01yeG9nVkNjbEdwZkRTR2NfS2ZiZWlMdERtZzZ0VEVwQUxXWTI1TUZSMHJtWi1UTzFmVTg3dG1QMVBwVDk5aWNDZjk0M0ZHazNxRDg1ZENjeEhEWXRCWmc0anNva1hDN0RyMWJnQllMQUZraEhTTGRTZ0gyY0hua2xqNEtTRnpEbU0wdEtTUENOUXJWaUNkOFRjRmFiZkVXd0l5T3NHMmsxaDVsZkVyS0dGRmZhbWFJMlBQRHZ5QTh6WFl0aHhPSmdSS2JNdnVz0gHzAUFVX3lxTE5hN29yTWVLamo3TFFCNnVOSUswNmRDaVRuX2VTTVJZZ0RMVm9ibXZjT2ZWdFhUdWR6RFVCMUNGNlVyLV9RV19JUGZpWVlnMklnTHdFNlYzSld0QXhKdUlKa1RpclVsRVlHQ2toRGdBT3NqTE9tVEVzVFlYbC1lVUpId1htY2RYMVRLWlBLeEhnMmpzN3EtZ3BXVFpuNU5zWnBxUHczeGszN0NVYlRCUHNQaDJXQUE2a0ZsbVV5MUFYMC1ad29QNkpFZXg1WUdqSTFhTkRNbFdEMGw1aE9uQTdRX3B2UlI1VThDUkVNZkhsSlUyRQ?oc=5" rel="noopener" target="_blank">TN</a></span>
+      </div>
+    </article>
+    
+    
+    <article class="ficha imp2" id="c009">
+      <div class="coord">
+        <span class="dato">AN-03 · RUMBO 120° · IMP 2</span>
+        
+        
+        <span class="tag">Voz · Dario Amodei</span>
+      </div>
+      <h3>Dario Amodei se reúne con Donald Trump y advierte sobre los riesgos reales de la IA</h3>
+      <p class="bajada">El CEO de Anthropic participó en un almuerzo sobre IA en la Casa Blanca, donde recibió elogios del mandatario estadounidense.</p>
+
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>El CEO de Anthropic, Dario Amodei, asistió a un almuerzo sobre inteligencia artificial en la Casa Blanca organizado por el presidente de EE. UU., Donald Trump. Durante el encuentro, Trump elogió a Amodei, quien aprovechó la instancia para alertar sobre los &#34;riesgos muy reales&#34; que presenta el avance acelerado de la IA. La reunión se da en medio de intensos debates políticos sobre la regulación de la tecnología y la seguridad nacional en el desarrollo de modelos de frontera.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Revela el nivel de acceso político que está logrando Anthropic para influir en las políticas de seguridad de IA en EE. UU., equilibrando la presión comercial con la advertencia de riesgos ante el gobierno.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="3 medios"><i class=""></i><i class=""></i><i class=""></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i></span>
+        <span class="dato">3 medios</span>
+        <span><a href="https://news.google.com/rss/articles/CBMi0gFBVV95cUxPNUFRZTFjaGFkRjV5VTFuSEtrY3hqOGxaQ3dBZUIxUnIwNEJaRWxZck5ueDg0cmFzNG9QU2lWWjVQZnRrY0MxWFplQ2JuZ0x5dW9ROHdNNUd3OTdFRUJYU1U3bUNlRVc4al9LcGVsQnFKWTFqUUlTSUF0RUxVb21GU1JlcGticFNpbVl4elBTZXc2aGl2Z3pOVXlucmVNX0lPQ1lJcU9WcHVZbDVWOVUySVFaV1BzbEo0ZjZEMTM1dmNYSmttNllZM0pjdHVkLTZvNlHSAdcBQVVfeXFMTVMzX2t4YkpsUVYwR2JLY0pBa2tPZjlMb2ZyNFZNSWwwM0hUMEE0bUxMa1FrY0xaaHpmb0g5MWhPY1NYeTdqUFdIMmNKS3ZPS21SVzZ6c0M3NWxFM282ci1YZ2RLTHlTbDNHY0hweHhRelN3VW1WVlF0b3FNbEhRbmY2eGdfeXVfY25jZ2pIR2dEbmY2aXRWX3czZ3JUSVl3bXNMWFRHRlNxOTdQMzczZndpVU96NFBocFBBZUJMQm9XN1VUTE92TDRVeU1lZnZxcmRzS0VlSEE?oc=5" rel="noopener" target="_blank">Firstpost</a> · <a href="https://news.google.com/rss/articles/CBMiW0FVX3lxTE11Mm9WTWx0aGZxZFBlMHRtQXduOF9LOWltQ1M0dnZJdDhac2J0RFlSQkJOQUtpNlp0dTd1eFpsV1cyaE9nM2RfYTNtUjFJcHpMU0dpOUZEdXJzQms?oc=5" rel="noopener" target="_blank">tokenpost.com</a> · <a href="https://news.google.com/rss/articles/CBMi1gFBVV95cUxNRDNwak54SEgyQnZROFdFcjJUMWRTeFRqYThFQjNUZWdQTjRTclFNMzRsd0phMmZITU11X1hXSE41anVReEV2bXFKZGtlYkVqSmtNczRQQ2dubjQtNlJrUlo1SFZ6WkpWcTJVZGNheXR6eUw4Ukx1ZFB1b2loRjFydWM4V0V1alMxTC1ub19EMnhURThSVnZFS2lxS3J2a24zOERjTkxwRVZpSU8yQkFlcmxJamJsc0JEcnBPMFNNTklEeUF0ZEZrNUxQV0ZfeDVXUkY4Uk5B?oc=5" rel="noopener" target="_blank">Business Today</a></span>
+      </div>
+    </article>
+    
+    
+    <article class="ficha imp2" id="c013">
+      <div class="coord">
+        <span class="dato">AN-04 · RUMBO 145° · IMP 2</span>
+        
+        
+        <span class="tag">Voz · Simon Willison</span>
+      </div>
+      <h3>Anthropic contrata a veterano de Google Project Zero y evalúa capacidades de hackeo en sus modelos</h3>
+      <p class="bajada">La compañía reforzó su Frontier AI Red Team para auditar la seguridad de sus modelos ante amenazas cibernéticas avanzadas.</p>
+
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>Anthropic contrató a un veterano de Google Project Zero para liderar su Frontier AI Red Team, el equipo encargado de poner a prueba la seguridad de sus modelos. En sus evaluaciones recientes, el equipo descubrió que modelos avanzados como Claude Mythos Preview lograron ejecutar secuestros de flujo de control (control flow hijacks) en un 6% de las pruebas del benchmark interno de explotación binaria, mientras que GLM-5.3 lo hizo en un 4%. Modelos anteriores, como Claude Opus 4.6, no lograban superar ninguna de estas pruebas, lo que evidencia un salto significativo en capacidades cibernéticas.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Demuestra que los LLMs actuales están adquiriendo capacidades reales de ciberseguridad ofensiva, lo que obliga a Anthropic a blindar sus sistemas y liderar la investigación en mitigación de exploits antes de que caigan en manos equivocadas.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="2 medios"><i class=""></i><i class=""></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i></span>
+        <span class="dato">2 medios</span>
+        <span><a href="https://news.google.com/rss/articles/CBMi4AFBVV95cUxQT3czZy03WHdzSURBbWllOUlNWDhtd05JTnp5M1JyQVpWd25sZkFZalEwRmxUQm5iZzB0czhKWkRKc0hzaHczX0pUSHNjNWd5cDAwTjh3cklXUmdYZnpVVUJRN09NQk9qdS1XSWRmMThMZlJwTGZaRFg0Z0tlRW42ZmZESWhYeUc3b3pxYVdHc09YUkp5VllGdHBpdzRtUGljSzBDcnEzaEZKbGM3LTZoeDZjV0xmT09xLVhjLUMwU1J4dGVyRThfYXlVNlZ1S2liTy1TR1c2QzZvQ1BnWnpiNw?oc=5" rel="noopener" target="_blank">Benzinga</a> · <a href="https://simonwillison.net/2026/Sep/29/anthropic-frontier-red-team/" rel="noopener" target="_blank">Simon Willison</a></span>
+      </div>
+    </article>
+    
+  </section>
+  
+  <section class="seccion competencia" id="s-competencia" aria-labelledby="h-competencia">
+    <div class="seccion-cab"><h2 id="h-competencia">Competencia</h2><span class="dato">Sector CP · 3 señales</span></div>
+    
+    
+    <article class="ficha imp3" id="c004">
+      <div class="coord">
+        <span class="dato">CP-05 · RUMBO 215° · IMP 3</span>
+        
+        
+        <span class="tag">Voz · Sam Altman</span>
+      </div>
+      <h3>Sam Altman presenta Dots, el nuevo agente de IA personal y autónomo de OpenAI</h3>
+      <p class="bajada">OpenAI reveló un asistente &#34;siempre activo&#34; diseñado para ejecutar tareas de forma autónoma manteniendo al usuario en control.</p>
+
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>Sam Altman presentó Dots, el nuevo agente de IA personal de OpenAI. Se trata de un sistema diseñado para estar &#34;siempre activo&#34; y realizar tareas complejas de manera autónoma en segundo plano. Durante la presentación, Altman enfatizó que, a pesar de su autonomía, el usuario final mantiene el control total de las acciones del agente. El lanzamiento de Dots ocurre en un momento de reestructuración interna de seguridad en OpenAI, tras haber pausado otros modelos por preocupaciones de fiabilidad.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Marca el inicio de la era de los agentes autónomos de consumo masivo por parte de OpenAI, compitiendo directamente con las funciones de agentes de Anthropic y redefiniendo cómo interactuamos con la IA en el día a día.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="11 medios"><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span>
+        <span class="dato">11 medios</span>
+        <span><a href="https://news.google.com/rss/articles/CBMimgFBVV95cUxPN0pnRkxMRmdHTVc1c3BMaGFhajdEaGs3UzB2bUtQUVZUT2w5M1hDNHlTYUdDREJZdFdNZndQLXgtRkZXY3g3NnlHSjdWNnBfQUI2eURxaC1ad21VbllzVE9Yd09ucXJqaFV6TkFUdnFpUW1iX3BUUGZ5dDh0b25jLXVzR2s5a01oUGdPU2lnTjN4dzV2Rnl1aGF3?oc=5" rel="noopener" target="_blank">Patch</a> · <a href="https://news.google.com/rss/articles/CBMif0FVX3lxTE9tRjZqS3R6VW1rR1UtMU9raVlfRnR0OFNZV1dGSWhIVDZYelFabjdjWTl3cmxMcEprRDQ0bDQzb2dxQUEzWk9GMS0wNU9SdG8yczRnTzh2WUxNWDdJVkFEaGZBcTZyMVJiOFpZQkFwTlVTY00tancyb25NWlpWc3M?oc=5" rel="noopener" target="_blank">CBS News</a> · <a href="https://news.google.com/rss/articles/CBMikgFBVV95cUxQbzZxQ3pPQnNtLVFBV0V5emhhRjRJWlp6enJBUFV4NkI3TFNDSHZkaWJnZ2Z0NWdOS2QycFFOSkZ2ZWJqRjl4dmpGZktSLUVES28zMVY5TnU4cnlINW5NTnpTbm9mY1paNl9lRVZiN2FOWTVRME1VUjQ4Y3BPRWQ1RXN3akt4VGtydDJiaFRkU19TUdIBpgFBVV95cUxOTEs1U1ptTEg3Q1dqYmIwRDYxRjZvX1dKVTJ3S1BsaGFYSVhORzNYaUsxWkhORUVua3U0SktDWVFUeTFvSjJsNnZMaG11OWlhTDEzZGt3YWx3elBOdEhtMkZvVUQzeGFQZDJyQTRnWVBoNDBfS2tzUHNzazdZM0JJNFg4RXdTeHpyS0Y5LVVWZndNYXotWTh1UlliY25nT3JQOWdna3pn?oc=5" rel="noopener" target="_blank">WGAU Radio | Athens, GA</a> · <a href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxPVjZsdGFrbUt2ZnN0RHBfV3J3anJ2SmU2Q2pLWHJFeHM4WFB1TF92SEV6Y3ZEMkl2SXdDRXU2VkdKZ0JvdnI2ZlNheWdCVE1ESHhmdm9zNThpd0hmMXI2aEgxNWhXT1d4a09lYWRUUXRGSXhjbmFfVkszRnpqYTRsQ1hrb0Mtd0lX?oc=5" rel="noopener" target="_blank">조선일보</a></span>
+      </div>
+    </article>
+    
+    
+    <article class="ficha imp2" id="c008">
+      <div class="coord">
+        <span class="dato">CP-06 · RUMBO 240° · IMP 2</span>
+        
+        
+        <span class="tag">Voz · Sam Altman</span>
+      </div>
+      <h3>OpenAI presenta GPT-6.1 Sol en el Dev Day y pausa el lanzamiento de GPT-6.1 Astra por seguridad</h3>
+      <p class="bajada">La compañía lanzó un modelo eficiente para programar y usar computadores, pero detuvo su modelo más potente por falta de fiabilidad.</p>
+
+      
+
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>En su Dev Day, OpenAI presentó GPT-6.1 Sol, un modelo diseñado para tareas profesionales, programación y uso de computadores que ofrece una inteligencia cercana a la de Astra pero a un quinto del precio de sus tokens de entrada y salida. Sin embargo, la gran sorpresa fue la cancelación del lanzamiento de GPT-6.1 Astra, su modelo más potente. El equipo de seguridad interno de OpenAI decidió pausar su despliegue tras descubrir en pruebas internas que el sistema no se comportaba de manera suficientemente fiable.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Muestra la tensión interna de OpenAI entre lanzar modelos ultra potentes y garantizar su seguridad, obligándolos a priorizar modelos más eficientes y económicos como GPT-6.1 Sol mientras resuelven la fiabilidad de sus sistemas avanzados.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="3 medios"><i class=""></i><i class=""></i><i class=""></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i></span>
+        <span class="dato">3 medios</span>
+        <span><a href="https://news.google.com/rss/articles/CBMidEFVX3lxTE1zc2VoVDl6U1VtczV2R2Q3RTU2N2hJcHlfNVAtOF9lR2wtSjF6U2FiZnliTUlKRU1qXzh2cXlobVBGX2NlaTd2bXprU0pYYlIyTThOWFhPSXhOWG40S1NDT0NPanU1cHZoM3RyT00xM1NLZEow?oc=5" rel="noopener" target="_blank">Mashable</a> · <a href="https://openai.com/index/introducing-gpt-6-1-sol" rel="noopener" target="_blank">OpenAI</a> · <a href="https://www.xataka.com/robotica-e-ia/openai-cancela-gpt-6-1-astra-su-propio-equipo-seguridad-ha-visto-que-modelo-no-era-fiable" rel="noopener" target="_blank">Xataka IA</a></span>
+      </div>
+    </article>
+    
+    
+    <article class="ficha imp2" id="c104">
+      <div class="coord">
+        <span class="dato">CP-07 · RUMBO 265° · IMP 2</span>
+        
+        <span class="tag">Video</span>
+        <span class="tag">Voz · Benjamín Cordero</span>
+      </div>
+      <h3>Benjamín Cordero analiza las claves del DevDay de OpenAI y los detalles de Dots y Codex</h3>
+      <p class="bajada">El creador chileno desglosa las novedades del evento, incluyendo las demos en vivo, errores y nuevas APIs para agentes.</p>
+
+      
+
+      
+      <a class="video" href="https://www.youtube.com/watch?v=2v-_ustjm6k" rel="noopener" target="_blank">
+        <span class="pantalla" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,255,255,.18)"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg></span>
+        <span><span class="etq">Ver en YouTube</span><br><span class="canal">Benjamín Cordero · análisis en español</span></span>
+      </a>
+      
+
+      <h4 class="etq">Qué pasó</h4>
+      <p>El creador de contenido chileno Benjamín Cordero publicó un análisis detallado con las 10 claves del DevDay de OpenAI. En su video, revisa el lanzamiento de Dots, el nuevo modelo GPT-6.1 Sol y herramientas para desarrolladores como Decisions API, Space y Codex en la nube. Cordero comparte su experiencia técnica probando la velocidad de Ultrafast en Codex, analiza el consumo de recursos y desglosa tanto los aciertos como los errores técnicos que ocurrieron durante las demostraciones en vivo del evento.</p>
+      <h4 class="etq">Por qué importa</h4>
+      <p>Te entrega una perspectiva técnica y en español sobre la viabilidad real de las nuevas herramientas de OpenAI, ayudándote a entender qué funciones de Codex y agentes vale la pena implementar hoy y cuáles fallaron en vivo.</p>
+
+      
+
+      <div class="fuentes">
+        <span class="cobertura" title="1 medios"><i class=""></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i><i class="vacio"></i></span>
+        <span class="dato">1 medio</span>
+        <span><a href="https://www.youtube.com/watch?v=2v-_ustjm6k" rel="noopener" target="_blank">YouTube Benjamín Cordero</a></span>
+      </div>
+    </article>
+    
+  </section>
+  
+
+  <footer class="pie">
+    <div><h2 class="etq">Cómo se hizo esta carta</h2><p>18 fuentes revisadas a las 08:21. No respondió: r/ClaudeAI. Selección y análisis con gemini-3.5-flash. Revisa siempre las fuentes.</p></div>
+    <div><h2 class="etq">Próxima edición</h2><p>Mañana a las 08:30. <a href="#">Ver cartas anteriores</a></p></div>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var barra = document.querySelector('.progreso');
+    function avance() {
+      var h = document.documentElement;
+      var total = h.scrollHeight - h.clientHeight;
+      barra.style.width = (total > 0 ? (h.scrollTop / total) * 100 : 0) + '%';
+    }
+    document.addEventListener('scroll', avance, { passive: true });
+    avance();
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('animateTransform').forEach(function (a) { a.remove(); });
+    }
+    document.querySelectorAll('[data-copiar]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var texto = b.getAttribute('data-copiar');
+        function ok() { b.textContent = 'Copiado'; setTimeout(function () { b.textContent = 'Copiar'; }, 1600); }
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(texto).then(ok, function () { seleccionar(b); });
+        } else { seleccionar(b); }
+      });
+    });
+    function seleccionar(b) {
+      var code = b.parentNode.querySelector('code');
+      var r = document.createRange(); r.selectNodeContents(code);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      b.textContent = 'Ctrl+C';
+    }
+  })();
+</script>

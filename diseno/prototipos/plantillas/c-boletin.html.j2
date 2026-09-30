@@ -1,0 +1,244 @@
+<title>Radar IA Boletín</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=DM+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: boletín de agencia. Cabezal gigante + teletipo; "En 30 segundos" en tres bloques; secciones como franjas de color a todo el ancho; tarjetas con stickers. */
+  :root {
+    --papel: #faf8f2;
+    --tinta: #111110;
+    --tinta-2: #57534b;
+    --linea: #111110;
+    --suave: #ece8dc;
+    --azul: #2321d6;
+    --naranjo: #ff5a1f;
+    --amarillo: #ffd23f;
+    --cc: var(--naranjo);
+    --an: var(--azul);
+    --cp: var(--amarillo);
+    --sobre-cc: #111110;
+    --sobre-an: #ffffff;
+    --sobre-cp: #111110;
+    --f-cartel: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+    --f-texto: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "DM Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --papel: #141412; --tinta: #f3efe4; --tinta-2: #b0aa9c; --linea: #f3efe4; --suave: #24231f;
+      --azul: #8583ff; --naranjo: #ff7a45; --amarillo: #ffd23f; --sobre-an: #0f0f0e; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --papel: #141412; --tinta: #f3efe4; --tinta-2: #b0aa9c; --linea: #f3efe4; --suave: #24231f;
+    --azul: #8583ff; --naranjo: #ff7a45; --amarillo: #ffd23f; --sobre-an: #0f0f0e; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papel); color: var(--tinta); font-family: var(--f-texto); font-size: 1.0625rem; line-height: 1.55; }
+  a { color: inherit; text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--naranjo); outline-offset: 2px; }
+  .mono { font-family: var(--f-mono); font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .ancho { max-width: 1180px; margin: 0 auto; padding-inline: 16px; }
+
+  .cabezal { padding-block: 22px 0; position: relative; }
+  .cabezal .sup { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 14px; border-bottom: 3px solid var(--linea); padding-bottom: 8px; }
+  .cabezal h1 { font-family: var(--f-cartel); font-weight: 900; text-transform: uppercase; font-size: clamp(4.4rem, 21vw, 14rem); line-height: .8; letter-spacing: -.01em; margin: 14px 0 6px; overflow-wrap: normal; }
+  .cabezal h1 span { color: var(--naranjo); }
+  .sticker { position: absolute; right: 20px; bottom: -34px; z-index: 2; width: clamp(88px, 20vw, 150px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; background: var(--amarillo); color: #111110; display: grid; place-content: center; text-align: center; transform: rotate(-12deg); border: 3px solid #111110; font-family: var(--f-cartel); font-weight: 800; text-transform: uppercase; line-height: .95; font-size: clamp(.95rem, 3.4vw, 1.4rem); padding: 8px; }
+  .sticker b { display: block; font-size: 2.1em; font-weight: 900; }
+  .cabezal .datos { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 0; border-top: 3px solid var(--linea); }
+
+  .teletipo { background: var(--tinta); color: var(--papel); overflow: hidden; border-block: 3px solid var(--linea); }
+  .teletipo .pista { display: flex; gap: 40px; width: max-content; padding: 9px 0; animation: corre 38s linear infinite; }
+  .teletipo span { font-family: var(--f-cartel); font-weight: 800; text-transform: uppercase; font-size: 1.15rem; letter-spacing: .03em; white-space: nowrap; }
+  .teletipo span::before { content: "✦ "; color: var(--amarillo); }
+  @keyframes corre { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .teletipo .pista { animation: none; flex-wrap: wrap; width: auto; padding-inline: 16px; gap: 6px 24px; } .teletipo .dup { display: none; } }
+
+  .tres { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); border-bottom: 3px solid var(--linea); }
+  .tres article { padding: 18px 16px 20px; display: grid; gap: 6px; align-content: start; border-top: 3px solid var(--linea); }
+  @media (min-width: 800px) { .tres article { border-top: 0; } .tres article + article { border-left: 3px solid var(--linea); } }
+  .tres .gigante { font-family: var(--f-cartel); font-weight: 900; font-size: 4.2rem; line-height: .8; color: var(--naranjo); }
+  .tres p { margin: 0; font-size: 1.12rem; line-height: 1.4; }
+  .tres b { font-weight: 750; }
+
+  .hoy { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); padding-block: 26px; align-items: center; border-bottom: 3px solid var(--linea); }
+  @media (min-width: 820px) { .hoy { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); } }
+  .hoy svg { width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto; }
+  .gajo.claude_code { fill: var(--cc); } .gajo.anthropic { fill: var(--an); } .gajo.competencia { fill: var(--cp); }
+  .gajo { opacity: .3; }
+  .aro { fill: none; stroke: var(--linea); stroke-width: 2; }
+  .aro.fino { stroke-width: 1; stroke-dasharray: 3 4; }
+  .punto circle { fill: var(--tinta); stroke: var(--papel); stroke-width: 2; }
+  .punto text { font-family: var(--f-cartel); font-weight: 900; font-size: 11px; fill: var(--papel); text-anchor: middle; }
+  .punto:hover circle, .punto:focus-visible circle { fill: var(--naranjo); }
+  .hoy h2 { font-family: var(--f-cartel); font-weight: 900; text-transform: uppercase; font-size: clamp(2.4rem, 8vw, 4rem); line-height: .9; margin: 0 0 12px; }
+  .hoy ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .hoy li a { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: baseline; text-decoration: none; padding: 6px 0; border-bottom: 1px solid var(--suave); }
+  .hoy li .n { font-family: var(--f-cartel); font-weight: 900; font-size: 1.5rem; line-height: 1; }
+  .hoy li .n.claude_code { color: var(--cc); } .hoy li .n.anthropic { color: var(--an); } .hoy li .n.competencia { color: var(--tinta); text-shadow: 0 0 0 var(--cp); }
+  .hoy li a:hover .t { text-decoration: underline; }
+
+  .franja { margin-top: 36px; padding: 14px 16px 10px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 6px 16px; scroll-margin-top: 12px; }
+  .franja h2 { font-family: var(--f-cartel); font-weight: 900; text-transform: uppercase; font-size: clamp(2.6rem, 10vw, 5.4rem); line-height: .82; margin: 0; }
+  .claude_code .franja { background: var(--cc); color: var(--sobre-cc); } .anthropic .franja { background: var(--an); color: var(--sobre-an); } .competencia .franja { background: var(--cp); color: var(--sobre-cp); }
+  .grilla { display: grid; gap: 0; grid-template-columns: minmax(0, 1fr); }
+  .nota { padding: 24px 0 26px; border-bottom: 3px solid var(--linea); display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; scroll-margin-top: 12px; }
+  .nota > * { min-width: 0; }
+  .nota .stickers { display: flex; flex-wrap: wrap; gap: 8px; }
+  .st { font-family: var(--f-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; border: 2px solid var(--linea); padding: 3px 8px; background: var(--papel); }
+  .st.release { background: var(--naranjo); color: #111110; border-color: #111110; transform: rotate(-2deg); }
+  .st.voz { background: var(--suave); }
+  .st.video { background: var(--tinta); color: var(--papel); }
+  .nota h3 { font-weight: 800; font-size: clamp(1.5rem, 5.4vw, 2.2rem); line-height: 1.08; letter-spacing: -.015em; margin: 0; text-wrap: balance; font-stretch: 88%; }
+  .nota.imp3 h3 { font-size: clamp(1.9rem, 7.4vw, 3.1rem); }
+  .nota .bajada { margin: 0; font-size: 1.18rem; line-height: 1.4; color: var(--tinta-2); max-width: 60ch; }
+  .columnas { display: grid; gap: 14px 28px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 860px) { .columnas { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .columnas h4 { margin: 0 0 4px; }
+  .columnas p { margin: 0; }
+  .postit { background: var(--amarillo); color: #111110; padding: 16px; border: 3px solid #111110; box-shadow: 6px 6px 0 #111110; display: grid; gap: 10px; transform: rotate(-.6deg); max-width: 720px; }
+  .postit { grid-template-columns: minmax(0, 1fr); }
+  .postit > * { min-width: 0; }
+  .postit h4 { margin: 0; font-family: var(--f-cartel); font-weight: 900; font-size: 1.6rem; text-transform: uppercase; line-height: 1; }
+  .postit p { margin: 0; overflow-wrap: anywhere; }
+  .cmd { max-width: 100%; min-width: 0; display: flex; gap: 8px; align-items: center; background: #111110; color: #faf8f2; padding: 6px 6px 6px 12px; min-width: 0; }
+  .cmd code { flex: 1; min-width: 0; font-family: var(--f-mono); font-size: .84rem; overflow-x: auto; white-space: nowrap; }
+  .copiar { font-family: var(--f-mono); font-size: .7rem; text-transform: uppercase; font-weight: 500; background: var(--amarillo); color: #111110; border: 0; padding: 8px 10px; min-height: 36px; cursor: pointer; }
+  code { font-family: var(--f-mono); font-size: .86em; }
+  .release { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); border: 3px solid var(--linea); padding: 16px; }
+  @media (min-width: 860px) { .release { grid-template-columns: 180px minmax(0, 1fr); } }
+  .release .grande { font-family: var(--f-cartel); font-weight: 900; font-size: 5.6rem; line-height: .8; }
+  .release .grande small { display: block; font-size: 1.2rem; line-height: 1; margin-top: 8px; }
+  .apilada { display: flex; height: 26px; border: 2px solid var(--linea); }
+  .apilada span { display: block; height: 100%; }
+  .apilada span + span { border-left: 2px solid var(--linea); }
+  .k-nuevo { background: var(--naranjo); } .k-mejora { background: var(--amarillo); } .k-cambio { background: var(--azul); } .k-arreglo { background: var(--suave); }
+  .ley { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; }
+  .ley span { display: inline-flex; align-items: center; gap: 6px; }
+  .ley i { width: 12px; height: 12px; border: 2px solid var(--linea); display: block; }
+  .release ul { margin: 10px 0 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: .95rem; overflow-wrap: anywhere; }
+  .release > * { min-width: 0; }
+  .video { display: flex; gap: 14px; align-items: center; text-decoration: none; border: 3px solid var(--linea); padding: 10px; max-width: 520px; }
+  .video .tv { width: 120px; aspect-ratio: 16 / 9; max-width: 100%; background: var(--azul); display: grid; place-items: center; color: #fff; font-family: var(--f-cartel); font-weight: 900; font-size: 1.6rem; }
+  .fuentes { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; color: var(--tinta-2); font-size: .95rem; }
+  .medios { display: inline-flex; }
+  .medios i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--papel); background: var(--tinta); margin-left: -4px; display: block; }
+  .medios i:first-child { margin-left: 0; }
+  .fuentes a { color: var(--tinta); }
+  .fin { margin-top: 40px; padding-block: 18px 48px; border-top: 6px solid var(--linea); display: grid; gap: 10px; }
+  .fin h2 { font-family: var(--f-cartel); font-weight: 900; text-transform: uppercase; font-size: clamp(2.2rem, 9vw, 4.4rem); line-height: .85; margin: 0; }
+  .fin p { margin: 0; color: var(--tinta-2); max-width: 70ch; }
+</style>
+
+<header class="cabezal ancho">
+  <div class="sup mono"><span>Boletín diario de IA generativa</span><span>{{ fecha_larga }}</span></div>
+  <h1>Radar<span>/</span>IA</h1>
+  <div class="sticker" aria-hidden="true">Edición<b>{{ edicion }}</b>{{ fecha_corta }}</div>
+  <div class="datos mono"><span>{{ total }} noticias</span><span>{{ minutos }} min de lectura</span><span>Cierre {{ hora }} CLST</span></div>
+</header>
+
+<div class="teletipo" aria-hidden="true">
+  <div class="pista">
+    {% for pasada in ['', 'dup'] %}
+    <span class="{{ pasada }}">Claude Code 2.1.285 · 136 cambios</span><span class="{{ pasada }}">OpenAI presenta Dots</span><span class="{{ pasada }}">GPT-6.1 Sol llega, Astra se frena</span><span class="{{ pasada }}">Anthropic avisa riesgo existencial</span><span class="{{ pasada }}">Amodei en la Casa Blanca</span><span class="{{ pasada }}">Nuevo video de Benjamín Cordero</span>
+    {% endfor %}
+  </div>
+</div>
+
+<main>
+  <section class="tres ancho" aria-label="En 30 segundos">
+    {% for r in resumen_dia %}
+    <article><span class="gigante" aria-hidden="true">{{ loop.index }}</span><p><b>{{ r.lead }}</b> {{ r.resto }}</p></article>
+    {% endfor %}
+  </section>
+
+  <section class="hoy ancho" aria-labelledby="t-hoy">
+    <svg viewBox="0 0 {{ radar.tam }} {{ radar.tam }}" role="group" aria-label="Radar del día: {{ total }} noticias por sección e importancia">
+      {% for g in radar.gajos %}<path class="gajo {{ g.seccion }}" d="{{ g.d }}"/>{% endfor %}
+      {% for a in radar.anillos %}<circle class="aro{{ '' if loop.last else ' fino' }}" cx="{{ radar.c }}" cy="{{ radar.c }}" r="{{ a }}"/>{% endfor %}
+      {% for p in radar.puntos %}
+      <a class="punto" href="#{{ p.id }}"><title>{{ p.n }}. {{ p.titular }}</title><circle cx="{{ p.x }}" cy="{{ p.y }}" r="{{ [p.r + 3, 11] | max }}"/><text x="{{ p.x }}" y="{{ p.y + 4 }}">{{ p.n }}</text></a>
+      {% endfor %}
+    </svg>
+    <div>
+      <h2 id="t-hoy">Hoy en el radar</h2>
+      <ol>
+        {% for it in items %}<li><a href="#{{ it.id }}"><span class="n {{ it.seccion }}">{{ it.n }}</span><span class="t">{{ it.titular }}</span></a></li>{% endfor %}
+      </ol>
+    </div>
+  </section>
+
+  {% for s in secciones %}
+  <section class="{{ s.clave }}" aria-labelledby="h-{{ s.clave }}">
+    <div class="franja" id="s-{{ s.clave }}"><h2 id="h-{{ s.clave }}">{{ s.nombre }}</h2><span class="mono">{{ s.notas | length }} noticia{{ 's' if s.notas | length != 1 }}</span></div>
+    <div class="grilla ancho">
+      {% for it in s.notas %}
+      <article class="nota imp{{ it.importancia }}" id="{{ it.id }}">
+        <div class="stickers">
+          <span class="st">N.º {{ it.n }}</span>
+          {% if it.es_release %}<span class="st release">Release v{{ it.version }}</span>{% endif %}
+          {% if it.es_video %}<span class="st video">Video</span>{% endif %}
+          {% for p in it.personas %}<span class="st voz">Voz: {{ p }}</span>{% endfor %}
+          {% if it.importancia == 3 %}<span class="st">Imperdible</span>{% endif %}
+        </div>
+        <h3>{{ it.titular }}</h3>
+        <p class="bajada">{{ it.bajada }}</p>
+
+        {% if it.es_release %}
+        <div class="release">
+          <div class="grande">{{ it.cambios.total }}<small>cambios en esta versión</small></div>
+          <div>
+            <div class="apilada" role="img" aria-label="{% for b in it.cambios.barras %}{{ b.n }} {{ b.nombre | lower }}{{ ', ' if not loop.last }}{% endfor %}">{% for b in it.cambios.barras %}<span class="k-{{ b.clave }}" style="width: {{ b.pct }}%"></span>{% endfor %}</div>
+            <div class="ley mono">{% for b in it.cambios.barras %}<span><i class="k-{{ b.clave }}"></i>{{ b.n }} {{ b.nombre }}</span>{% endfor %}</div>
+            <ul>{% for d in it.cambios.destacados %}<li>{{ d | codigo }}</li>{% endfor %}</ul>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if it.es_video %}
+        <a class="video" href="{{ it.fuentes[0].link }}" rel="noopener" target="_blank"><span class="tv" aria-hidden="true">▶</span><span><span class="mono">Ver en YouTube</span><br>{{ it.personas[0] }}</span></a>
+        {% endif %}
+
+        <div class="columnas">
+          <div><h4 class="mono">Qué pasó</h4><p>{{ it.que_paso }}</p></div>
+          <div><h4 class="mono">Por qué importa</h4><p>{{ it.por_que_importa }}</p></div>
+        </div>
+
+        {% if it.que_probar %}
+        <div class="postit">
+          <h4>Pruébalo hoy</h4>
+          <p>{{ it.que_probar }}</p>
+          {% for c in it.comandos %}<div class="cmd"><code>{{ c }}</code><button class="copiar" type="button" data-copiar="{{ c }}">Copiar</button></div>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="fuentes">
+          <span class="medios" aria-hidden="true">{% for i in range([it.cobertura, 6] | min) %}<i></i>{% endfor %}</span>
+          <span class="mono">{{ it.cobertura }} medio{{ 's' if it.cobertura != 1 }}</span>
+          {% for f in it.fuentes[:4] %}<a href="{{ f.link }}" rel="noopener" target="_blank">{{ f.medio }}</a>{% endfor %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <footer class="fin ancho">
+    <h2>Fin de la edición</h2>
+    <p>{{ fuentes_revisadas }} fuentes revisadas a las {{ hora }}. Sin respuesta: {{ fuentes_caidas | join(', ') }}. Selección y análisis con {{ modelo }}; revisa siempre las fuentes. La próxima edición llega mañana a las 08:30. <a href="#">Ediciones anteriores</a></p>
+  </footer>
+</main>
+
+<script>
+  (function () {
+    document.querySelectorAll('[data-copiar]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var texto = b.getAttribute('data-copiar');
+        function ok() { b.textContent = '¡Copiado!'; setTimeout(function () { b.textContent = 'Copiar'; }, 1600); }
+        function sel() { var r = document.createRange(); r.selectNodeContents(b.parentNode.querySelector('code')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Ctrl+C'; }
+        if (navigator.clipboard) navigator.clipboard.writeText(texto).then(ok, sel); else sel();
+      });
+    });
+  })();
+</script>
