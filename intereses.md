@@ -1,35 +1,38 @@
-# Mis intereses para el resumen diario
+# Mis intereses: Radar IA
 
-Este archivo lo lee Gemini cada mañana para elegir los 5 titulares.
+Este archivo lo lee Gemini cada mañana para decidir qué entra al correo.
 Edítalo cuando quieras: los cambios se aplican desde el día siguiente.
 
-## Prioridad alta (en este orden)
-1. **Tecnología e IA**: modelos de IA, big tech, startups, chips, regulación tech, ciberseguridad.
-2. **Internacional**: geopolítica, EE.UU., China, Europa, conflictos, Latinoamérica.
-3. **Economía y mercados**: dólar, IPC, tasas del Banco Central, cobre, bolsa, grandes empresas.
-4. **Política Chile**: Gobierno, Congreso, elecciones, reformas.
+## Tema
+IA generativa, con foco en **Claude Code** y **Anthropic**. Las noticias generales (política, economía, deportes, etc.) no me interesan aquí.
 
-## Prioridad media
-- **Inmobiliario y arriendos**: precios de vivienda y arriendo, créditos hipotecarios, permisos de edificación.
-- **Música y cultura**: música electrónica, industria musical, festivales, tecnología para DJ y productores.
-- **Ciencia y medioambiente**: clima, energía, descubrimientos científicos, salud.
-- **Deportes**: fútbol chileno, selección, grandes eventos deportivos.
+## Secciones y prioridad (de mayor a menor)
+1. **Claude Code**: releases y cambios de cada versión, skills, plugins, MCP, hooks, subagentes, trucos, workflows y buenas prácticas de la comunidad. Todo release nuevo entra siempre.
+2. **Anthropic y Claude**: modelos nuevos, anuncios, blog de ingeniería, productos (Claude en Chrome, Cowork, etc.), empresa, financiamiento, políticas y seguridad.
+3. **Competencia**: OpenAI/ChatGPT, Google/Gemini, Codex, Cursor y otras herramientas de IA para programar o trabajar con agentes.
 
-## Excluir siempre
-- Policiales y crónica roja (salvo que tengan impacto político o económico).
-- Farándula y espectáculos.
-- Virales, tendencias de redes, curiosidades y horóscopo.
-- Clima (pronóstico del tiempo) y tránsito.
+## Personas que quiero seguir
+Cuando hablan, publican o los entrevistan sobre IA, entra (con la etiqueta 🎙):
+- **Benjamín Cordero** (YouTube @bencord, en español; habla harto de Claude).
+- **Dario Amodei** (CEO de Anthropic).
+- **Boris Cherny** (creador de Claude Code).
+- **Sam Altman** (CEO de OpenAI).
+- **Simon Willison** (blog sobre LLMs y Claude Code).
+
+## Eventos
+Conferencias, lanzamientos en vivo, DevDay, keynotes, charlas y podcasts del mundo de la IA: entran cuando hay novedades concretas.
+
+## Descartar
+- Rumores sin fuente, memes, reposts y listas tipo "10 prompts increíbles".
+- Cursos, ventas y contenido promocional.
+- Noticias que solo mencionan IA de pasada.
+- Finanzas y bolsa, salvo cuando afectan directamente a Anthropic u OpenAI (por ejemplo, una salida a bolsa).
 
 ## Reglas de selección
-- **Mix:** 3 noticias de Chile y 2 del mundo. Si un día no alcanza, se permite 2 y 3.
-- **Tendencia:** preferir lo que está cubriendo más de un medio a la vez y lo que está en la portada de Google News. Tendencia = relevancia real, no viral de redes.
-- **Desempate:** si dos noticias pesan lo mismo, gana la de mayor prioridad según el orden de arriba.
-- **No repetir** noticias enviadas en los últimos 3 días, salvo que haya un desarrollo nuevo e importante.
+- **Cantidad variable:** entre 0 y 10 ítems, máximo 5 por sección. Un día tranquilo es un correo corto. No rellenar.
+- **Tendencia:** algo que cubren varios medios a la vez pesa más, pero un release o un trato concreto de Claude Code pesa más que un titular viral.
+- **No repetir** lo enviado en los últimos días, salvo un desarrollo nuevo e importante.
 
-## Estilo del análisis
-- ~200 palabras por noticia.
-- Contexto y por qué importa hoy.
-- Distintas miradas (gobierno, oposición, expertos, empresas, otros países).
-- Qué mirar después: próximos hitos, fechas o señales.
-- Español de Chile, directo y neutral.
+## Estilo
+- Español de Chile, claro y directo, sin jerga innecesaria. Los nombres de productos y comandos quedan en inglés.
+- Qué pasó, por qué importa y, cuando aplica, **qué probar hoy** (comando o configuración exacta).

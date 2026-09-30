@@ -3,62 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Resumen {{ fecha_larga }}</title>
-<meta name="description" content="Resumen de noticias del {{ fecha_larga }}: {{ noticias[0].titular }}">
+<title>Radar IA · {{ fecha_larga }}</title>
+<meta name="description" content="Radar IA del {{ fecha_larga }}{% if noticias %}: {{ noticias[0].titular }}{% endif %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --papel: #f4efe6; --papel-2: #ebe4d7; --tinta: #1c1a17; --tinta-2: #5b554c;
-    --regla: #cfc5b3; --acento: #c2361b; --acento-suave: #f3d9cf; --mundo: #1f5c73; --mundo-suave: #d6e6ec;
+    --fondo: #f3efe7; --panel: #fbf8f2; --tinta: #1d1b17; --tinta-2: #5d574c; --regla: #d4cab8;
+    --acento: #c4471f; --acento-suave: #f4ddd2; --codigo: #ebe4d6;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --papel: #16140f; --papel-2: #1f1c16; --tinta: #efe8da; --tinta-2: #a79f90;
-      --regla: #3a342a; --acento: #ff7a5c; --acento-suave: #3a1f17; --mundo: #7cc3dc; --mundo-suave: #15303a;
+      --fondo: #0f1115; --panel: #171a21; --tinta: #efe9dc; --tinta-2: #9aa0b1; --regla: #2a2f3a;
+      --acento: #ec8a5f; --acento-suave: #3a231a; --codigo: #22262f;
     }
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; background: var(--papel); color: var(--tinta);
-    font-family: "Newsreader", Georgia, serif; font-size: 1.125rem; line-height: 1.6;
-    background-image: radial-gradient(var(--regla) 0.5px, transparent 0.5px);
-    background-size: 22px 22px; background-attachment: fixed;
-  }
-  .hoja { max-width: 760px; margin: 0 auto; padding: 0 16px 64px; background: var(--papel); min-height: 100vh;
-    box-shadow: 0 0 0 1px var(--regla); }
-  header { padding: 40px 0 20px; border-bottom: 3px double var(--tinta); text-align: center; }
+  body { margin: 0; background: var(--fondo); color: var(--tinta); font-family: "Newsreader", Georgia, serif; font-size: 1.125rem; line-height: 1.6; }
+  .hoja { max-width: 760px; margin: 0 auto; padding: 0 16px 64px; background: var(--panel); min-height: 100vh; box-shadow: 0 0 0 1px var(--regla); }
+  header { padding: 44px 0 22px; border-bottom: 3px double var(--tinta); }
   .sobre { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--tinta-2); }
-  h1 { font-family: "Fraunces", serif; font-weight: 800; font-size: clamp(2.4rem, 9vw, 4rem); line-height: .95; margin: 10px 0 8px; letter-spacing: -.02em; }
+  h1 { font-family: "Fraunces", serif; font-weight: 800; font-size: clamp(2.6rem, 10vw, 4.4rem); line-height: .92; margin: 10px 0 8px; letter-spacing: -.03em; }
   h1 em { font-style: normal; color: var(--acento); }
   .fecha { font-style: italic; color: var(--tinta-2); margin: 0; }
-  nav.indice { padding: 18px 0; border-bottom: 1px solid var(--regla); }
-  nav.indice ol { margin: 0; padding: 0; list-style: none; counter-reset: n; }
-  nav.indice li { counter-increment: n; display: flex; gap: 12px; padding: 6px 0; align-items: baseline; }
-  nav.indice li::before { content: counter(n, decimal-leading-zero); font-family: "IBM Plex Mono", monospace; font-size: .8rem; color: var(--acento); }
-  nav.indice a { color: var(--tinta); text-decoration: none; font-weight: 500; line-height: 1.35; }
+  .aviso { margin: 22px 0 0; padding: 14px 16px; background: var(--acento-suave); border-left: 3px solid var(--acento); }
+  nav.indice { padding: 18px 0 6px; border-bottom: 1px solid var(--regla); }
+  nav.indice h2 { margin: 14px 0 4px; }
+  nav.indice ul { margin: 0 0 8px; padding: 0; list-style: none; }
+  nav.indice li { padding: 3px 0; line-height: 1.35; }
+  nav.indice a { color: var(--tinta); text-decoration: none; }
   nav.indice a:hover { text-decoration: underline; text-decoration-color: var(--acento); }
-  .aviso { margin: 18px 0 0; padding: 10px 14px; background: var(--papel-2); border-left: 3px solid var(--tinta-2); font-size: .95rem; }
-  article { padding: 36px 0 28px; border-bottom: 1px solid var(--regla); opacity: 0; transform: translateY(8px); animation: entra .5s ease forwards; }
-  {% for _ in noticias %}article:nth-of-type({{ loop.index }}) { animation-delay: {{ loop.index0 * 90 }}ms; }
-  {% endfor %}
+  h2.seccion { font-family: "IBM Plex Mono", monospace; font-size: .8rem; letter-spacing: .2em; text-transform: uppercase; color: var(--acento); font-weight: 500; margin: 36px 0 0; padding-bottom: 6px; border-bottom: 2px solid var(--acento); }
+  nav.indice h2 { font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--tinta-2); font-weight: 500; }
+  article { padding: 28px 0 26px; border-bottom: 1px solid var(--regla); opacity: 0; transform: translateY(8px); animation: entra .5s ease forwards; }
   @keyframes entra { to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { article { animation: none; opacity: 1; transform: none; } }
-  .etiquetas { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
-  .num { font-family: "Fraunces", serif; font-size: 2.6rem; line-height: 1; color: var(--acento); font-weight: 800; margin-right: 6px; }
-  .chip { padding: 3px 8px; border-radius: 2px; background: var(--acento-suave); color: var(--acento); }
-  .chip.mundo { background: var(--mundo-suave); color: var(--mundo); }
+  .etiquetas { display: flex; flex-wrap: wrap; gap: 8px; font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .chip { padding: 3px 8px; background: var(--acento-suave); color: var(--acento); border-radius: 2px; }
   .chip.gris { background: transparent; color: var(--tinta-2); border: 1px solid var(--regla); }
-  h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.12; margin: 14px 0 10px; letter-spacing: -.01em; }
-  .bajada { font-style: italic; font-size: 1.2rem; color: var(--tinta-2); margin: 0 0 18px; }
-  h3 { font-family: "IBM Plex Mono", monospace; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--acento); margin: 22px 0 6px; font-weight: 500; }
-  p { margin: 0 0 12px; }
-  .miradas { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-  .miradas li { padding: 10px 14px; background: var(--papel-2); border-left: 3px solid var(--regla); }
-  .miradas b { font-weight: 500; display: block; font-size: .95rem; }
-  .fuentes { margin-top: 20px; font-size: .92rem; color: var(--tinta-2); }
+  h3.titular { font-family: "Fraunces", serif; font-weight: 600; font-size: clamp(1.45rem, 5vw, 1.9rem); line-height: 1.14; margin: 10px 0 8px; letter-spacing: -.01em; }
+  .bajada { font-style: italic; font-size: 1.15rem; color: var(--tinta-2); margin: 0 0 14px; }
+  h4 { font-family: "IBM Plex Mono", monospace; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--acento); margin: 18px 0 4px; font-weight: 500; }
+  p { margin: 0 0 10px; }
+  .probar { margin-top: 16px; padding: 12px 16px; background: var(--codigo); border-left: 3px solid var(--acento); }
+  .probar h4 { margin-top: 0; }
+  code { font-family: "IBM Plex Mono", monospace; font-size: .85em; background: var(--codigo); padding: 1px 5px; border-radius: 3px; }
+  .fuentes { margin-top: 16px; font-size: .92rem; color: var(--tinta-2); }
   .fuentes a { color: var(--tinta); text-decoration: underline; text-decoration-color: var(--regla); text-underline-offset: 3px; overflow-wrap: anywhere; }
   .fuentes a:hover { text-decoration-color: var(--acento); }
   footer { padding: 28px 0 0; font-size: .85rem; color: var(--tinta-2); text-align: center; }
@@ -68,52 +60,51 @@
 <body>
 <div class="hoja">
   <header>
-    <div class="sobre">Resumen de noticias · Santiago</div>
-    <h1>Las 5 <em>de hoy</em></h1>
-    <p class="fecha">{{ fecha_larga }}</p>
+    <div class="sobre">{{ fecha_larga }}</div>
+    <h1>Radar <em>IA</em></h1>
+    <p class="fecha">Claude Code · Anthropic · Competencia</p>
+    {% if aviso %}<p class="aviso">{{ aviso }}</p>{% endif %}
   </header>
 
+  {% if noticias %}
   <nav class="indice" aria-label="Titulares">
-    <ol>
-      {% for n in noticias %}<li><a href="#{{ n.id }}">{{ n.titular }}</a></li>
-      {% endfor %}
-    </ol>
-    {% if nota_mix %}<p class="aviso">{{ nota_mix }}</p>{% endif %}
+    {% for nombre, items in secciones %}
+    <h2>{{ nombre }}</h2>
+    <ul>{% for n in items %}<li><a href="#{{ n.id }}">{{ n.titular }}</a></li>{% endfor %}</ul>
+    {% endfor %}
   </nav>
+  {% endif %}
 
-  {% for n in noticias %}
+  {% for nombre, items in secciones %}
+  <h2 class="seccion">{{ nombre }}</h2>
+  {% for n in items %}
   <article id="{{ n.id }}">
     <div class="etiquetas">
-      <span class="num">{{ loop.index }}</span>
-      <span class="chip {{ 'mundo' if n.ambito == 'mundo' else '' }}">{{ 'Chile' if n.ambito == 'chile' else 'Mundo' }}</span>
-      <span class="chip gris">{{ n.tema }}</span>
+      {% for e in n.etiquetas %}<span class="chip">{{ e }}</span>{% endfor %}
       {% if n.cobertura > 1 %}<span class="chip gris">{{ n.cobertura }} medios</span>{% endif %}
     </div>
-    <h2>{{ n.titular }}</h2>
+    <h3 class="titular">{{ n.titular }}</h3>
     <p class="bajada">{{ n.bajada }}</p>
 
-    <h3>Contexto y por qué importa</h3>
-    <p>{{ n.contexto }}</p>
+    <h4>Qué pasó</h4>
+    <p>{{ n.que_paso }}</p>
 
-    {% if n.miradas %}
-    <h3>Distintas miradas</h3>
-    <ul class="miradas">
-      {% for m in n.miradas %}<li><b>{{ m.actor }}</b>{{ m.postura }}</li>
-      {% endfor %}
-    </ul>
+    <h4>Por qué importa</h4>
+    <p>{{ n.por_que_importa }}</p>
+
+    {% if n.que_probar %}
+    <div class="probar"><h4>Qué probar</h4><p>{{ n.que_probar | replace("`", "") }}</p></div>
     {% endif %}
-
-    <h3>Qué mirar después</h3>
-    <p>{{ n.que_mirar }}</p>
 
     <div class="fuentes">Fuentes:
       {% for f in n.fuentes %}<a href="{{ f.link }}" rel="noopener" target="_blank">{{ f.medio }}</a>{{ ", " if not loop.last }}{% endfor %}
     </div>
   </article>
   {% endfor %}
+  {% endfor %}
 
   <footer>
-    Análisis generado con {{ modelo }} a partir de los feeds de medios chilenos e internacionales. Puede tener errores: revisa las fuentes.
+    Generado con {{ modelo }} a partir de fuentes públicas. Puede tener errores: revisa las fuentes.
     {% if url_archivo %}<br><a href="{{ url_archivo }}">Días anteriores</a>{% endif %}
   </footer>
 </div>

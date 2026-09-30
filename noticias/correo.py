@@ -9,16 +9,22 @@ from .validar import Resumen
 
 
 def texto_plano(resumen: Resumen) -> str:
-    lineas = [f"Las 5 de hoy ({resumen.fecha})", ""]
-    for i, n in enumerate(resumen.noticias, 1):
-        lineas += [f"{i}. {n.titular}", f"   {n.bajada}", f"   {n.fuentes[0].medio}: {n.fuentes[0].link}", ""]
+    lineas = [f"Radar IA ({resumen.fecha})", ""]
+    if resumen.aviso:
+        lineas += [resumen.aviso, ""]
+    for nombre, items in resumen.secciones():
+        lineas.append(nombre.upper())
+        for n in items:
+            lineas += [f"- {n.titular}", f"  {n.bajada}", f"  {n.fuentes[0].medio}: {n.fuentes[0].link}"]
+        lineas.append("")
     lineas.append(f"Análisis completo: {url_del_dia(resumen.fecha)}")
     return "\n".join(lineas)
 
 
 def asunto(resumen: Resumen) -> str:
     dd, mm = resumen.fecha[8:10], resumen.fecha[5:7]
-    return f"Resumen {dd}-{mm}: {resumen.noticias[0].titular}"
+    principal = resumen.noticias[0].titular if resumen.noticias else "día tranquilo"
+    return f"Radar IA {dd}-{mm}: {principal}"
 
 
 def enviar(resumen: Resumen) -> str:

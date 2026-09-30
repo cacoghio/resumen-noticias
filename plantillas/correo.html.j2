@@ -1,28 +1,32 @@
 <!doctype html>
 <html lang="es-CL">
-<body style="margin:0;padding:0;background:#f4efe6;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe6;">
+<body style="margin:0;padding:0;background:#0f1115;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0f1115;">
 <tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fffdf8;border:1px solid #cfc5b3;">
-  <tr><td style="padding:24px 24px 12px;border-bottom:3px double #1c1a17;font-family:Georgia,serif;">
-    <div style="font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5b554c;">Resumen de noticias</div>
-    <div style="font-size:30px;font-weight:bold;color:#1c1a17;line-height:1.1;margin-top:6px;">Las 5 <span style="color:#c2361b;">de hoy</span></div>
-    <div style="font-style:italic;color:#5b554c;margin-top:4px;">{{ fecha_larga }}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#171a21;border:1px solid #2a2f3a;">
+  <tr><td style="padding:26px 24px 16px;border-bottom:1px solid #2a2f3a;font-family:Georgia,serif;">
+    <div style="font-family:Courier New,monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8b93a7;">{{ fecha_larga }}</div>
+    <div style="font-size:32px;font-weight:bold;color:#f2efe8;line-height:1.05;margin-top:8px;">Radar <span style="color:#e8845a;">IA</span></div>
+    <div style="font-size:14px;color:#8b93a7;margin-top:4px;">Claude Code · Anthropic · Competencia</div>
   </td></tr>
-  {% for n in noticias %}
-  <tr><td style="padding:18px 24px;border-bottom:1px solid #e3dccd;font-family:Georgia,serif;">
-    <div style="font-family:Courier New,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:{{ '#1f5c73' if n.ambito == 'mundo' else '#c2361b' }};">
-      {{ loop.index }} · {{ 'Chile' if n.ambito == 'chile' else 'Mundo' }} · {{ n.tema }}
-    </div>
-    <div style="font-size:19px;font-weight:bold;line-height:1.25;color:#1c1a17;margin:6px 0;">{{ n.titular }}</div>
-    <div style="font-size:15px;line-height:1.5;color:#3d3830;">{{ n.bajada }}</div>
-    <div style="font-size:13px;color:#5b554c;margin-top:8px;">
-      {% for f in n.fuentes[:3] %}<a href="{{ f.link }}" style="color:#5b554c;">{{ f.medio }}</a>{{ " · " if not loop.last }}{% endfor %}
+  {% if aviso %}
+  <tr><td style="padding:22px 24px;font-family:Georgia,serif;font-size:16px;color:#d8d4ca;">{{ aviso }}</td></tr>
+  {% endif %}
+  {% for nombre, items in secciones %}
+  <tr><td style="padding:22px 24px 4px;font-family:Courier New,monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#e8845a;">{{ nombre }}</td></tr>
+  {% for n in items %}
+  <tr><td style="padding:10px 24px 14px;border-bottom:1px solid #22262f;font-family:Georgia,serif;">
+    {% if n.etiquetas %}<div style="font-family:Courier New,monospace;font-size:11px;color:#8b93a7;margin-bottom:4px;">{{ n.etiquetas | join("  ·  ") }}</div>{% endif %}
+    <div style="font-size:18px;font-weight:bold;line-height:1.25;color:#f2efe8;">{{ n.titular }}</div>
+    <div style="font-size:15px;line-height:1.5;color:#b9b5ab;margin-top:4px;">{{ n.bajada }}</div>
+    <div style="font-size:13px;margin-top:8px;">
+      {% for f in n.fuentes[:3] %}<a href="{{ f.link }}" style="color:#8b93a7;">{{ f.medio }}</a>{{ "  ·  " if not loop.last }}{% endfor %}
     </div>
   </td></tr>
   {% endfor %}
-  <tr><td align="center" style="padding:24px;">
-    <a href="{{ url_pagina }}" style="display:inline-block;background:#c2361b;color:#ffffff;text-decoration:none;font-family:Georgia,serif;font-size:16px;padding:12px 22px;">Leer el análisis completo →</a>
+  {% endfor %}
+  <tr><td align="center" style="padding:26px 24px;">
+    <a href="{{ url_pagina }}" style="display:inline-block;background:#e8845a;color:#16130f;text-decoration:none;font-family:Georgia,serif;font-size:16px;font-weight:bold;padding:12px 22px;">Leer el análisis completo →</a>
   </td></tr>
 </table>
 </td></tr>

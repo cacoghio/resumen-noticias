@@ -28,7 +28,8 @@ def contexto(resumen: Resumen) -> dict:
     return {
         "fecha_larga": fecha_larga(resumen.fecha),
         "noticias": resumen.noticias,
-        "nota_mix": resumen.nota_mix,
+        "secciones": resumen.secciones(),
+        "aviso": resumen.aviso,
         "modelo": resumen.modelo,
         "url_pagina": url_del_dia(resumen.fecha),
         "url_archivo": "archivo.html",

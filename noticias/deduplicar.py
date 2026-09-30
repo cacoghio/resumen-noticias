@@ -8,7 +8,7 @@ PALABRAS_VACIAS = set("""
 a al ante bajo con contra de del desde durante e el en entre es esta este esto hacia hasta la las
 le les lo los mas mas no o para pero por que se sin sobre su sus tras un una unos unas y ya
 como cual cuando donde fue han hay ha ser son sera tiene tienen otra otro muy tras segun
-the of and to in for on with is at by
+the of and to in for on with is at by a an new its it as from that this are was be has have
 """.split())
 
 UMBRAL = 0.45
@@ -60,7 +60,7 @@ def agrupar(noticias: list[Noticia], umbral: float = UMBRAL) -> list[Cluster]:
 
     clusters = [Cluster(id="", noticias=notas) for _, notas in grupos]
     clusters.sort(
-        key=lambda c: (c.cobertura, c.portada, c.fecha.timestamp() if c.fecha else 0),
+        key=lambda c: (c.peso, c.cobertura, c.fecha.timestamp() if c.fecha else 0),
         reverse=True,
     )
     for i, c in enumerate(clusters, start=1):

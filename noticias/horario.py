@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from .config import DIAS_HISTORIAL, DOCS, ZONA
+from .config import DIAS_HISTORIAL, DIAS_VISTOS, DOCS, ZONA
 
 DESDE, HASTA = time(7, 30), time(11, 0)
 ESTADO = DOCS / "estado.json"
@@ -43,6 +43,35 @@ def ultimo_envio() -> str | None:
 
 def marcar_enviado(fecha: str, url: str) -> None:
     _escribir(ESTADO, {"ultimo_envio": fecha, "pagina": url})
+
+
+VISTOS = DOCS / "vistos.json"
+
+
+def leer_vistos() -> dict:
+    vistos = _leer(VISTOS, {})
+    return {"links": vistos.get("links", {}), "changelog": vistos.get("changelog", "")}
+
+
+def filtrar_vistos(noticias: list, vistos: dict) -> list:
+    """Saca lo ya enviado. La primera vez (sin historial) también descarta los posts sin fecha,
+    porque no se sabe si son de hoy; quedan marcados como vistos para mañana."""
+    primera_vez = not vistos["links"]
+    return [
+        n for n in noticias
+        if n.link not in vistos["links"] and not (primera_vez and n.fecha is None and n.tipo != "release")
+    ]
+
+
+def actualizar_vistos(vistos: dict, fecha: str, links: list[str], version: str, dias: int = DIAS_VISTOS) -> dict:
+    limite = (date.fromisoformat(fecha) - timedelta(days=dias)).isoformat()
+    links_nuevos = {l: f for l, f in vistos["links"].items() if f >= limite}
+    links_nuevos.update({l: fecha for l in links})
+    return {"links": links_nuevos, "changelog": version or vistos["changelog"]}
+
+
+def guardar_vistos(fecha: str, links: list[str], version: str) -> None:
+    _escribir(VISTOS, actualizar_vistos(leer_vistos(), fecha, links, version))
 
 
 def leer_historial() -> list[dict]:

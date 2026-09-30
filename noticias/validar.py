@@ -1,25 +1,24 @@
 """Esquemas de la respuesta de Gemini y validación del resumen final.
 
-Los links NUNCA vienen de Gemini: se toman de los clusters (feeds reales).
+Los links NUNCA vienen de Gemini: se toman de los clusters (fuentes reales).
 """
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .config import MAX_ITEMS, MAX_POR_SECCION
 from .modelos import Cluster
 
-TEMAS = Literal[
-    "tecnologia_ia", "internacional", "economia", "politica_chile",
-    "inmobiliario", "musica_cultura", "ciencia_medioambiente", "deportes", "otro",
-]
-NOMBRE_TEMA = {
-    "tecnologia_ia": "Tecnología e IA", "internacional": "Internacional",
-    "economia": "Economía", "politica_chile": "Política",
-    "inmobiliario": "Inmobiliario", "musica_cultura": "Música y cultura",
-    "ciencia_medioambiente": "Ciencia", "deportes": "Deportes", "otro": "Otro",
+Seccion = Literal["claude_code", "anthropic", "competencia"]
+ORDEN_SECCIONES = ["claude_code", "anthropic", "competencia"]
+NOMBRE_SECCION = {
+    "claude_code": "Claude Code",
+    "anthropic": "Anthropic y Claude",
+    "competencia": "Competencia",
 }
-PALABRAS_MIN, PALABRAS_MAX = 120, 340
-MAX_FUENTES = 5
+ETIQUETA_TIPO = {"release": "📦 Release", "video": "▶ Video"}
+PALABRAS_MIN, PALABRAS_MAX = 40, 400
+AVISO_DIA_TRANQUILO = "Día tranquilo: hoy no hubo novedades importantes en tus temas."
 
 
 class ErrorValidacion(Exception):
@@ -29,26 +28,21 @@ class ErrorValidacion(Exception):
 # --- Lo que devuelve Gemini ---
 class Elegida(BaseModel):
     id: str = Field(description="id del cluster candidato, ej. c007")
-    ambito: Literal["chile", "mundo"]
-    tema: TEMAS
+    seccion: Seccion
+    importancia: int = Field(ge=1, le=3, description="3 = no te lo puedes perder, 1 = menor")
 
 
 class Seleccion(BaseModel):
     elegidas: list[Elegida]
 
 
-class Mirada(BaseModel):
-    actor: str = Field(description="quién opina: gobierno, oposición, expertos, empresa, otro país...")
-    postura: str
-
-
 class Analisis(BaseModel):
     id: str
     titular: str
     bajada: str
-    contexto: str
-    miradas: list[Mirada]
-    que_mirar: str
+    que_paso: str
+    por_que_importa: str
+    que_probar: str = ""
 
 
 class Redaccion(BaseModel):
@@ -64,37 +58,52 @@ class Fuente(BaseModel):
 
 class Item(BaseModel):
     id: str
-    ambito: Literal["chile", "mundo"]
-    tema: str
+    seccion: Seccion
     titular: str
     bajada: str
-    contexto: str
-    miradas: list[Mirada]
-    que_mirar: str
+    que_paso: str
+    por_que_importa: str
+    que_probar: str = ""
     fuentes: list[Fuente]
     cobertura: int
+    personas: list[str] = []
+    etiquetas: list[str] = []
+    importancia: int = 2
 
 
 class Resumen(BaseModel):
     fecha: str
     modelo: str
     noticias: list[Item]
-    nota_mix: str = ""
+    aviso: str = ""
+
+    def secciones(self) -> list[tuple[str, list[Item]]]:
+        """[(nombre de sección, items)] solo de las secciones que tienen algo."""
+        return [
+            (NOMBRE_SECCION[s], [i for i in self.noticias if i.seccion == s])
+            for s in ORDEN_SECCIONES
+            if any(i.seccion == s for i in self.noticias)
+        ]
 
 
 def _palabras(a: Analisis) -> int:
-    texto = " ".join([a.contexto, a.que_mirar, *(m.postura for m in a.miradas)])
-    return len(texto.split())
+    return len(" ".join([a.que_paso, a.por_que_importa, a.que_probar]).split())
 
 
-def _fuentes(cluster: Cluster) -> list[Fuente]:
+def _fuentes(cluster: Cluster, maximo: int = 5) -> list[Fuente]:
     vistas, fuentes = set(), []
-    for n in sorted(cluster.noticias, key=lambda n: n.portada):  # medios directos primero
+    for n in cluster.noticias:
         if n.medio in vistas:
             continue
         vistas.add(n.medio)
         fuentes.append(Fuente(medio=n.medio, titulo=n.titulo, link=n.link))
-    return fuentes[:MAX_FUENTES]
+    return fuentes[:maximo]
+
+
+def _etiquetas(cluster: Cluster) -> list[str]:
+    etiquetas = [ETIQUETA_TIPO[t] for t in ("release", "video") if t in cluster.tipos]
+    etiquetas += [f"🎙 {p}" for p in cluster.personas]
+    return etiquetas
 
 
 def armar_resumen(
@@ -104,18 +113,18 @@ def armar_resumen(
     por_id = {c.id: c for c in clusters}
     errores = []
 
-    if len(elegidas) != 5 or len({e.id for e in elegidas}) != 5:
-        errores.append(f"se esperaban 5 noticias distintas y llegaron {len(elegidas)}")
-    for e in elegidas:
-        if e.id not in por_id:
-            errores.append(f"id inexistente: {e.id}")
-
-    chile = sum(e.ambito == "chile" for e in elegidas)
-    nota_mix = ""
-    if chile == 2 and len(elegidas) == 5:
-        nota_mix = "Hoy van 2 de Chile y 3 del mundo: no hubo una tercera noticia chilena a la altura."
-    elif chile != 3 and len(elegidas) == 5:
-        errores.append(f"mix inválido: {chile} Chile / {5 - chile} mundo (se espera 3/2 o 2/3)")
+    ids = [e.id for e in elegidas]
+    if len(elegidas) > MAX_ITEMS:
+        errores.append(f"se eligieron {len(elegidas)} noticias y el máximo es {MAX_ITEMS}")
+    if len(set(ids)) != len(ids):
+        errores.append("hay ids repetidos")
+    for i in ids:
+        if i not in por_id:
+            errores.append(f"id inexistente: {i}")
+    for seccion in ORDEN_SECCIONES:
+        n = sum(e.seccion == seccion for e in elegidas)
+        if n > MAX_POR_SECCION:
+            errores.append(f"la sección {seccion} tiene {n} noticias (máximo {MAX_POR_SECCION})")
 
     textos = {a.id: a for a in analisis}
     items = []
@@ -124,7 +133,7 @@ def armar_resumen(
         if a is None:
             errores.append(f"falta el análisis de {e.id}")
             continue
-        vacios = [k for k in ("titular", "bajada", "contexto", "que_mirar") if not getattr(a, k).strip()]
+        vacios = [k for k in ("titular", "bajada", "que_paso", "por_que_importa") if not getattr(a, k).strip()]
         if vacios:
             errores.append(f"{e.id}: campos vacíos {vacios}")
         n = _palabras(a)
@@ -135,14 +144,15 @@ def armar_resumen(
         if e.id in por_id:
             c = por_id[e.id]
             items.append(Item(
-                id=e.id, ambito=e.ambito, tema=NOMBRE_TEMA.get(e.tema, e.tema),
-                titular=a.titular.strip(), bajada=a.bajada.strip(), contexto=a.contexto.strip(),
-                miradas=a.miradas, que_mirar=a.que_mirar.strip(),
-                fuentes=_fuentes(c), cobertura=c.cobertura,
+                id=e.id, seccion=e.seccion, titular=a.titular.strip(), bajada=a.bajada.strip(),
+                que_paso=a.que_paso.strip(), por_que_importa=a.por_que_importa.strip(),
+                que_probar=a.que_probar.strip(), fuentes=_fuentes(c), cobertura=c.cobertura,
+                personas=c.personas, etiquetas=_etiquetas(c), importancia=e.importancia,
             ))
 
     if errores:
         raise ErrorValidacion("; ".join(errores))
 
-    # Se mantiene el orden de Gemini: de mayor a menor prioridad
-    return Resumen(fecha=fecha, modelo=modelo, noticias=items, nota_mix=nota_mix)
+    items.sort(key=lambda i: (ORDEN_SECCIONES.index(i.seccion), -i.importancia))
+    aviso = "" if items else AVISO_DIA_TRANQUILO
+    return Resumen(fecha=fecha, modelo=modelo, noticias=items, aviso=aviso)

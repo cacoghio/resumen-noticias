@@ -1,4 +1,4 @@
-"""Resumen diario de noticias.
+"""Radar IA: resumen diario sobre IA generativa, Claude Code y Anthropic.
 
 Uso:
   python resumen.py --solo-recoleccion   recolecta y deduplica, no llama a Gemini
@@ -15,22 +15,21 @@ from noticias.deduplicar import agrupar
 from noticias.recolectar import recolectar
 
 
-def mostrar_recoleccion(reportes, noticias, clusters, cuantos=15):
-    print("== Feeds ==")
+def mostrar_recoleccion(reportes, noticias, clusters, cuantos=25):
+    print("== Fuentes ==")
     for r in reportes:
         estado = f"ERROR {r.error}" if r.error else "ok"
-        print(f"  {r.medio:<20} leídas={r.leidas:<4} últimas 30h={r.recientes:<4} {estado}")
-    print(f"\nNotas: {len(noticias)}  ->  clusters (historias únicas): {len(clusters)}")
-    print(f"\n== Top {cuantos} por cobertura ==")
+        print(f"  {r.medio:<26} leídas={r.leidas:<4} recientes={r.recientes:<4} {estado}")
+    print(f"\nNotas: {len(noticias)}  ->  historias únicas: {len(clusters)}")
+    print(f"\n== Top {cuantos} (releases y voces primero) ==")
     for c in clusters[:cuantos]:
-        marca = " [portada]" if c.portada else ""
-        medios = ", ".join(sorted({n.medio for n in c.noticias}))
-        print(f"  {c.id} x{c.cobertura}{marca}  {c.principal.titulo[:90]}")
-        print(f"         {medios}")
+        tipos = "/".join(sorted(c.tipos))
+        personas = f" 🎙{', '.join(c.personas)}" if c.personas else ""
+        print(f"  {c.id} x{c.cobertura} [{'/'.join(sorted(c.secciones))}|{tipos}]{personas}  {c.principal.titulo[:85]}")
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(description="Resumen diario de noticias")
+    p = argparse.ArgumentParser(description="Radar IA")
     p.add_argument("--solo-recoleccion", action="store_true")
     p.add_argument("--sin-correo", action="store_true")
     p.add_argument("--forzar", action="store_true")
@@ -46,16 +45,18 @@ def main(argv=None) -> int:
         if not corre:
             return 0
 
-    noticias, reportes = recolectar(ahora)
+    vistos = horario.leer_vistos()
+    noticias, reportes = recolectar(ahora, version_vista=vistos["changelog"] or None)
+    noticias = horario.filtrar_vistos(noticias, vistos)
     clusters = agrupar(noticias)
-    caidos = [r.medio for r in reportes if r.error]
-    print(f"Recolección: {len(noticias)} notas, {len(clusters)} historias. Feeds con error: {caidos or 'ninguno'}")
+    caidos = [f"{r.medio} ({r.error})" for r in reportes if r.error]
+    print(f"Recolección: {len(noticias)} notas nuevas, {len(clusters)} historias. Fuentes con error: {caidos or 'ninguna'}")
 
     if args.solo_recoleccion:
         mostrar_recoleccion(reportes, noticias, clusters)
         return 0
-    if len(clusters) < 10:
-        raise SystemExit("Muy pocas noticias recolectadas; algo anda mal con los feeds.")
+    if len(reportes) - len(caidos) < 3:
+        raise SystemExit("Casi todas las fuentes fallaron; no se envía nada.")
 
     from noticias.analizar import generar_resumen
     from noticias.pagina import generar_pagina
@@ -66,7 +67,9 @@ def main(argv=None) -> int:
     url = generar_pagina(resumen)
     print(f"Página: {url}")
     for i, n in enumerate(resumen.noticias, 1):
-        print(f"  {i}. [{n.ambito}/{n.tema}] {n.titular}")
+        print(f"  {i}. [{n.seccion}] {n.titular}")
+    if resumen.aviso:
+        print(f"  {resumen.aviso}")
 
     if args.sin_correo:
         return 0
@@ -74,6 +77,12 @@ def main(argv=None) -> int:
     from noticias.correo import enviar
     destino = enviar(resumen)
     print(f"Correo enviado a {destino}")
+
+    elegidos = {n.id for n in resumen.noticias}
+    links = [l for c in clusters if c.id in elegidos for l in c.links]
+    links += [n.link for n in noticias if n.fecha is None and n.tipo != "release"]
+    version = max((n.version for n in noticias if n.version), default="", key=lambda v: tuple(map(int, v.split("."))))
+    horario.guardar_vistos(fecha, links, version)
     horario.marcar_enviado(fecha, url)
     horario.guardar_historial(fecha, [n.titular for n in resumen.noticias])
     return 0
