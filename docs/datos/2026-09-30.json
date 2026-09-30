@@ -1,28 +1,23 @@
 {
   "fecha": "2026-09-30",
-  "modelo": "gemini-3.5-flash",
+  "modelo": "gemini-3.5-flash-lite",
   "noticias": [
     {
       "id": "c001",
       "seccion": "claude_code",
-      "titular": "Claude Code 2.1.285 permite desactivar búsquedas web y abre la app de escritorio desde la terminal",
-      "bajada": "La nueva actualización de Claude Code introduce variables de entorno clave, mejoras en la configuración de plugins y mayor control para administradores.",
-      "que_paso": "Anthropic lanzó Claude Code 2.1.285. Entre las novedades destaca la variable de entorno CLAUDE_CODE_DISABLE_WEB_FETCH para desactivar la herramienta WebFetch, y el comando claude --desktop para abrir la app de escritorio en el directorio actual o continuar una sesión. También se añade claude plugin configure <plugin> para ver y guardar opciones de plugins, la opción de configurar servidores MCP empaquetados durante la instalación, y el ajuste administrado allowedProviders para restringir los proveedores de API permitidos en una máquina. Se corrigieron errores en subagentes con CLAUDE_CODE_FORK_SUBAGENT=1, descargas fallidas en Remote Control y problemas de SSH.",
-      "por_que_importa": "Te da mucho más control sobre la privacidad y seguridad de tu entorno de desarrollo, permitiendo bloquear el acceso web y restringir qué proveedores de API se usan en entornos corporativos. Además, facilita la transición entre la terminal y la app de escritorio.",
-      "que_probar": "Prueba desactivar WebFetch con export CLAUDE_CODE_DISABLE_WEB_FETCH=true o abre la app de escritorio en tu directorio actual usando claude --desktop.",
+      "titular": "Claude Code 2.1.285: nuevas opciones de plugins, variables de entorno y mejoras en subagentes",
+      "bajada": "La nueva versión de Claude Code trae controles avanzados para plugins, ajustes gestionados y correcciones en ejecución remota.",
+      "que_paso": "Claude Code lanzó la versión 2.1.285 incorporando importantes novedades técnicas. Se añadió la variable de entorno CLAUDE_CODE_DISABLE_WEB_FETCH para desactivar la herramienta WebFetch y el comando claude --desktop para abrir la app de escritorio en el directorio actual. En la gestión de plugins, ahora se puede usar claude plugin configure para ver opciones y configurar servidores MCP al instalar con claude plugin install --config. Además, se sumó la política allowedProviders para restringir proveedores de API y se corrigieron errores en subagentes, conexiones SSH y manejo de modelos al cambiar a mitad de sesión.",
+      "por_que_importa": "Para quienes usan Claude Code a diario, estas funciones otorgan un control mucho más fino sobre la seguridad, la gestión de plugins empaquetados y la integración con entornos corporativos o remotos complejos, evitando bloqueos molestos en la terminal.",
+      "que_probar": "Prueba abrir la app directamente ejecutando claude --desktop o configura opciones de un plugin con claude plugin configure <plugin>.",
       "fuentes": [
-        {
-          "medio": "MIXED Reality News",
-          "titulo": "Claude Code 2.1.285 lets you turn off web fetching, and admins limit its API providers",
-          "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxQbWI0TFRvWUt6MUo4bnZxQmZaQ2t4NGFUTVJXQTdYRDdoTXNubEJnM3M0YW5EZXk1VWFjYmRQYnVub1R6SlBTekZCcERyaXl6ZGxON0FhejcxTnNGNUFGXy1BcnRDQ0VxZkQ5UEozRE80emhfVlY3cDMxbUNuRm1HSE5NME9yYXpvR1E?oc=5"
-        },
         {
           "medio": "Claude Code",
           "titulo": "Claude Code 2.1.285",
           "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.285"
         }
       ],
-      "cobertura": 2,
+      "cobertura": 1,
       "personas": [],
       "etiquetas": [
         "📦 Release"
@@ -32,10 +27,10 @@
     {
       "id": "c003",
       "seccion": "anthropic",
-      "titular": "Anthropic advierte sobre \"riesgos existenciales para la humanidad\" en su folleto de salida a la bolsa",
-      "bajada": "La startup de inteligencia artificial incluyó una inusual advertencia de seguridad global en los documentos financieros para sus futuros inversionistas.",
-      "que_paso": "Anthropic, la creadora de Claude, incluyó una advertencia explícita en su prospecto de salida a la bolsa (IPO), señalando que el desarrollo de la inteligencia artificial podría representar un \"riesgo existencial para la humanidad\". Este tipo de advertencias regulatorias suele enfocarse en riesgos financieros o de competencia, pero la firma decidió transparentar los peligros potenciales de seguridad y control asociados a modelos de frontera altamente avanzados, reflejando su filosofía de desarrollo seguro y alineación de IA.",
-      "por_que_importa": "Muestra que Anthropic mantiene su enfoque de seguridad extrema incluso bajo la presión de salir al mercado financiero, lo que podría influir en cómo los inversionistas y reguladores evalúan el futuro de la IA generativa.",
+      "titular": "Anthropic advierte sobre riesgos existenciales de la IA en su prospecto de salida a bolsa",
+      "bajada": "En documentos para su futura apertura bursátil, Anthropic incluyó advertencias explícitas sobre los peligros existenciales de la tecnología.",
+      "que_paso": "Diversos medios reportaron que, en los documentos oficiales de su proceso hacia la salida a la bolsa, Anthropic dedicó apartados a alertar a los inversores sobre los riesgos severos que su tecnología puede acarrear. La compañía señaló que el desarrollo de inteligencia artificial avanzada conlleva la posibilidad de generar impactos imprevisibles o riesgos existenciales para la humanidad, transparentando los desafíos éticos y de seguridad inherentes al negocio.",
+      "por_que_importa": "Demuestra la postura pública de Anthropic frente a la gobernanza y los riesgos de sus modelos, priorizando la transparencia ante el mercado financiero sobre el optimismo comercial desmedido.",
       "que_probar": "",
       "fuentes": [
         {
@@ -64,81 +59,38 @@
           "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQWE44LXo2Szh0bDVjTWJWSHFyQVFZRHJIZ0wyWTBOOHdoV0ZYSW0zS0RTcW9IOWlLMHBZd3ZmcXR3akJDc18wblFETkIwUXVWeGMzY25LejZ6UTZjb3R2YXdyNUpndDFqa0NUZ18zVXg1OEJUVVR3T0pIOU1GV0lybFJ4ZFNBTnhMVzJ6ZnNDQUdWSmkyQ29ydnhtU2prNVpMZ0dhZDdWRWZpS0g2M1JReHpjUC16SldwWVE?oc=5"
         }
       ],
-      "cobertura": 14,
+      "cobertura": 11,
+      "personas": [],
+      "etiquetas": [],
+      "importancia": 3
+    },
+    {
+      "id": "c070",
+      "seccion": "anthropic",
+      "titular": "Anthropic entrega mayor visibilidad a los equipos de seguridad en Claude Code y Cowork",
+      "bajada": "Nuevas herramientas de Anthropic permiten a los equipos de seguridad monitorear de cerca la actividad de agentes y herramientas.",
+      "que_paso": "Anthropic introdujo nuevas capacidades orientadas a los equipos de seguridad de las empresas, entregando mayor visibilidad sobre el uso de Claude Code, Cowork y otros agentes de IA en las organizaciones. Esta funcionalidad permite auditar y supervisar las acciones que realizan las herramientas de IA dentro de los entornos corporativos.",
+      "por_que_importa": "Facilita la adopción corporativa de herramientas avanzadas al entregar a los departamentos de TI y seguridad el control necesario para cumplir con normativas internas.",
+      "que_probar": "",
+      "fuentes": [
+        {
+          "medio": "cyberpress.org",
+          "titulo": "Anthropic Gives Security Teams Visibility Into Claude Code, Cowork and AI Agent Activity",
+          "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTFBzR25nMkxSTXZBTlhtVVVYY2FkcjBGWFpLR0FOMUhoQ1UwckNYQTFpWDhmZld4aVBrMUZRNnlVbWZZVmplUWM2cHVnU3h5REh5aGcwb3czeFp5bE1PaTVDVHhiTzQtb3pQYS1ZNmduSlZXSmfSAXNBVV95cUxQc0duZzJMUk12QU5YbVVVWGNhZHIwRlhaS0dBTjFIaENVMHJDWEExaVg4ZmZXeGlQazFGUTZ5VW1mWVZqZVFjNnB1Z1N4eURIeWhnMG93M3haeWxNT2k1Q1R4Yk80LW96UGEtWTZnbkpWV0pn?oc=5"
+        }
+      ],
+      "cobertura": 1,
       "personas": [],
       "etiquetas": [],
       "importancia": 2
     },
     {
-      "id": "c009",
-      "seccion": "anthropic",
-      "titular": "Dario Amodei se reúne con Donald Trump y advierte sobre los riesgos reales de la IA",
-      "bajada": "El CEO de Anthropic participó en un almuerzo sobre IA en la Casa Blanca, donde recibió elogios del mandatario estadounidense.",
-      "que_paso": "El CEO de Anthropic, Dario Amodei, asistió a un almuerzo sobre inteligencia artificial en la Casa Blanca organizado por el presidente de EE. UU., Donald Trump. Durante el encuentro, Trump elogió a Amodei, quien aprovechó la instancia para alertar sobre los \"riesgos muy reales\" que presenta el avance acelerado de la IA. La reunión se da en medio de intensos debates políticos sobre la regulación de la tecnología y la seguridad nacional en el desarrollo de modelos de frontera.",
-      "por_que_importa": "Revela el nivel de acceso político que está logrando Anthropic para influir en las políticas de seguridad de IA en EE. UU., equilibrando la presión comercial con la advertencia de riesgos ante el gobierno.",
-      "que_probar": "",
-      "fuentes": [
-        {
-          "medio": "Firstpost",
-          "titulo": "Anthropic CEO Dario Amodei flags ‘very real risks’ of AI after White House meeting with Trump",
-          "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxPNUFRZTFjaGFkRjV5VTFuSEtrY3hqOGxaQ3dBZUIxUnIwNEJaRWxZck5ueDg0cmFzNG9QU2lWWjVQZnRrY0MxWFplQ2JuZ0x5dW9ROHdNNUd3OTdFRUJYU1U3bUNlRVc4al9LcGVsQnFKWTFqUUlTSUF0RUxVb21GU1JlcGticFNpbVl4elBTZXc2aGl2Z3pOVXlucmVNX0lPQ1lJcU9WcHVZbDVWOVUySVFaV1BzbEo0ZjZEMTM1dmNYSmttNllZM0pjdHVkLTZvNlHSAdcBQVVfeXFMTVMzX2t4YkpsUVYwR2JLY0pBa2tPZjlMb2ZyNFZNSWwwM0hUMEE0bUxMa1FrY0xaaHpmb0g5MWhPY1NYeTdqUFdIMmNKS3ZPS21SVzZ6c0M3NWxFM282ci1YZ2RLTHlTbDNHY0hweHhRelN3VW1WVlF0b3FNbEhRbmY2eGdfeXVfY25jZ2pIR2dEbmY2aXRWX3czZ3JUSVl3bXNMWFRHRlNxOTdQMzczZndpVU96NFBocFBBZUJMQm9XN1VUTE92TDRVeU1lZnZxcmRzS0VlSEE?oc=5"
-        },
-        {
-          "medio": "tokenpost.com",
-          "titulo": "Trump Praises Anthropic CEO Dario Amodei at White House AI Lunch",
-          "link": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE11Mm9WTWx0aGZxZFBlMHRtQXduOF9LOWltQ1M0dnZJdDhac2J0RFlSQkJOQUtpNlp0dTd1eFpsV1cyaE9nM2RfYTNtUjFJcHpMU0dpOUZEdXJzQms?oc=5"
-        },
-        {
-          "medio": "Business Today",
-          "titulo": "Anthropic CEO Dario Amodei Warns AI Has ‘Very Real Risks’ Amid Safety Debate",
-          "link": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxNRDNwak54SEgyQnZROFdFcjJUMWRTeFRqYThFQjNUZWdQTjRTclFNMzRsd0phMmZITU11X1hXSE41anVReEV2bXFKZGtlYkVqSmtNczRQQ2dubjQtNlJrUlo1SFZ6WkpWcTJVZGNheXR6eUw4Ukx1ZFB1b2loRjFydWM4V0V1alMxTC1ub19EMnhURThSVnZFS2lxS3J2a24zOERjTkxwRVZpSU8yQkFlcmxJamJsc0JEcnBPMFNNTklEeUF0ZEZrNUxQV0ZfeDVXUkY4Uk5B?oc=5"
-        }
-      ],
-      "cobertura": 3,
-      "personas": [
-        "Dario Amodei"
-      ],
-      "etiquetas": [
-        "🎙 Dario Amodei"
-      ],
-      "importancia": 2
-    },
-    {
-      "id": "c013",
-      "seccion": "anthropic",
-      "titular": "Anthropic contrata a veterano de Google Project Zero y evalúa capacidades de hackeo en sus modelos",
-      "bajada": "La compañía reforzó su Frontier AI Red Team para auditar la seguridad de sus modelos ante amenazas cibernéticas avanzadas.",
-      "que_paso": "Anthropic contrató a un veterano de Google Project Zero para liderar su Frontier AI Red Team, el equipo encargado de poner a prueba la seguridad de sus modelos. En sus evaluaciones recientes, el equipo descubrió que modelos avanzados como Claude Mythos Preview lograron ejecutar secuestros de flujo de control (control flow hijacks) en un 6% de las pruebas del benchmark interno de explotación binaria, mientras que GLM-5.3 lo hizo en un 4%. Modelos anteriores, como Claude Opus 4.6, no lograban superar ninguna de estas pruebas, lo que evidencia un salto significativo en capacidades cibernéticas.",
-      "por_que_importa": "Demuestra que los LLMs actuales están adquiriendo capacidades reales de ciberseguridad ofensiva, lo que obliga a Anthropic a blindar sus sistemas y liderar la investigación en mitigación de exploits antes de que caigan en manos equivocadas.",
-      "que_probar": "",
-      "fuentes": [
-        {
-          "medio": "Benzinga",
-          "titulo": "Anthropic Just Hired a Google Project Zero Veteran To Lead Its Frontier AI Red Team",
-          "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQT3czZy03WHdzSURBbWllOUlNWDhtd05JTnp5M1JyQVpWd25sZkFZalEwRmxUQm5iZzB0czhKWkRKc0hzaHczX0pUSHNjNWd5cDAwTjh3cklXUmdYZnpVVUJRN09NQk9qdS1XSWRmMThMZlJwTGZaRFg0Z0tlRW42ZmZESWhYeUc3b3pxYVdHc09YUkp5VllGdHBpdzRtUGljSzBDcnEzaEZKbGM3LTZoeDZjV0xmT09xLVhjLUMwU1J4dGVyRThfYXlVNlZ1S2liTy1TR1c2QzZvQ1BnWnpiNw?oc=5"
-        },
-        {
-          "medio": "Simon Willison",
-          "titulo": "Quoting Anthropic Frontier Red Team",
-          "link": "https://simonwillison.net/2026/Sep/29/anthropic-frontier-red-team/"
-        }
-      ],
-      "cobertura": 2,
-      "personas": [
-        "Simon Willison"
-      ],
-      "etiquetas": [
-        "🎙 Simon Willison"
-      ],
-      "importancia": 2
-    },
-    {
       "id": "c004",
       "seccion": "competencia",
-      "titular": "Sam Altman presenta Dots, el nuevo agente de IA personal y autónomo de OpenAI",
-      "bajada": "OpenAI reveló un asistente \"siempre activo\" diseñado para ejecutar tareas de forma autónoma manteniendo al usuario en control.",
-      "que_paso": "Sam Altman presentó Dots, el nuevo agente de IA personal de OpenAI. Se trata de un sistema diseñado para estar \"siempre activo\" y realizar tareas complejas de manera autónoma en segundo plano. Durante la presentación, Altman enfatizó que, a pesar de su autonomía, el usuario final mantiene el control total de las acciones del agente. El lanzamiento de Dots ocurre en un momento de reestructuración interna de seguridad en OpenAI, tras haber pausado otros modelos por preocupaciones de fiabilidad.",
-      "por_que_importa": "Marca el inicio de la era de los agentes autónomos de consumo masivo por parte de OpenAI, compitiendo directamente con las funciones de agentes de Anthropic y redefiniendo cómo interactuamos con la IA en el día a día.",
+      "titular": "Sam Altman presenta Dots, el nuevo agente personal autónomo de OpenAI",
+      "bajada": "OpenAI develó Dots, un asistente personal de funcionamiento continuo diseñado para realizar tareas de manera autónoma.",
+      "que_paso": "Sam Altman presentó oficialmente Dots, un nuevo agente de inteligencia artificial de OpenAI concebido para operar de forma continua y autónoma en segundo plano. El anuncio llega tras decisiones de la compañía de pausar otros desarrollos debido a precauciones de seguridad. Dots busca mantener al usuario en control mientras ejecuta tareas complejas del día a día, posicionándose como la apuesta de OpenAI en el terreno de los agentes personales permanentes.",
+      "por_que_importa": "Marca un cambio estratégico hacia agentes con autonomía extendida en la competencia directa por asistentes de productividad personal frente a otras herramientas del mercado.",
       "que_probar": "",
       "fuentes": [
         {
@@ -167,71 +119,12 @@
           "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE1Pekh2SWRSSnMyS00yb0pkckZobkN2NGpnTmEzQzhWaVprcUQzcFdPbFJMNnJFUXFOTDlUMVh3YU83VG11enRZV2ZGYzNGb25XRWFORExUVEpyZGFZaXVzeXlLdjh5OF9ieGxON3I4ZVdzUjdLZ0RTUDVxLXNyZEk?oc=5"
         }
       ],
-      "cobertura": 11,
+      "cobertura": 9,
       "personas": [
         "Sam Altman"
       ],
       "etiquetas": [
         "🎙 Sam Altman"
-      ],
-      "importancia": 3
-    },
-    {
-      "id": "c008",
-      "seccion": "competencia",
-      "titular": "OpenAI presenta GPT-6.1 Sol en el Dev Day y pausa el lanzamiento de GPT-6.1 Astra por seguridad",
-      "bajada": "La compañía lanzó un modelo eficiente para programar y usar computadores, pero detuvo su modelo más potente por falta de fiabilidad.",
-      "que_paso": "En su Dev Day, OpenAI presentó GPT-6.1 Sol, un modelo diseñado para tareas profesionales, programación y uso de computadores que ofrece una inteligencia cercana a la de Astra pero a un quinto del precio de sus tokens de entrada y salida. Sin embargo, la gran sorpresa fue la cancelación del lanzamiento de GPT-6.1 Astra, su modelo más potente. El equipo de seguridad interno de OpenAI decidió pausar su despliegue tras descubrir en pruebas internas que el sistema no se comportaba de manera suficientemente fiable.",
-      "por_que_importa": "Muestra la tensión interna de OpenAI entre lanzar modelos ultra potentes y garantizar su seguridad, obligándolos a priorizar modelos más eficientes y económicos como GPT-6.1 Sol mientras resuelven la fiabilidad de sus sistemas avanzados.",
-      "que_probar": "",
-      "fuentes": [
-        {
-          "medio": "Mashable",
-          "titulo": "Biggest news from OpenAI Dev Day: Dots, GPT-6.1 Sol, new plans",
-          "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE1zc2VoVDl6U1VtczV2R2Q3RTU2N2hJcHlfNVAtOF9lR2wtSjF6U2FiZnliTUlKRU1qXzh2cXlobVBGX2NlaTd2bXprU0pYYlIyTThOWFhPSXhOWG40S1NDT0NPanU1cHZoM3RyT00xM1NLZEow?oc=5"
-        },
-        {
-          "medio": "OpenAI",
-          "titulo": "Introducing GPT-6.1 Sol",
-          "link": "https://openai.com/index/introducing-gpt-6-1-sol"
-        },
-        {
-          "medio": "Xataka IA",
-          "titulo": "OpenAI cancela el lanzamiento de GPT-6.1 Astra: su propio equipo de seguridad ha visto que el modelo no era fiable",
-          "link": "https://www.xataka.com/robotica-e-ia/openai-cancela-gpt-6-1-astra-su-propio-equipo-seguridad-ha-visto-que-modelo-no-era-fiable"
-        }
-      ],
-      "cobertura": 3,
-      "personas": [
-        "Sam Altman"
-      ],
-      "etiquetas": [
-        "🎙 Sam Altman"
-      ],
-      "importancia": 2
-    },
-    {
-      "id": "c104",
-      "seccion": "competencia",
-      "titular": "🎙 Benjamín Cordero analiza las claves del DevDay de OpenAI y los detalles de Dots y Codex",
-      "bajada": "El creador chileno desglosa las novedades del evento, incluyendo las demos en vivo, errores y nuevas APIs para agentes.",
-      "que_paso": "El creador de contenido chileno Benjamín Cordero publicó un análisis detallado con las 10 claves del DevDay de OpenAI. En su video, revisa el lanzamiento de Dots, el nuevo modelo GPT-6.1 Sol y herramientas para desarrolladores como Decisions API, Space y Codex en la nube. Cordero comparte su experiencia técnica probando la velocidad de Ultrafast en Codex, analiza el consumo de recursos y desglosa tanto los aciertos como los errores técnicos que ocurrieron durante las demostraciones en vivo del evento.",
-      "por_que_importa": "Te entrega una perspectiva técnica y en español sobre la viabilidad real de las nuevas herramientas de OpenAI, ayudándote a entender qué funciones de Codex y agentes vale la pena implementar hoy y cuáles fallaron en vivo.",
-      "que_probar": "",
-      "fuentes": [
-        {
-          "medio": "YouTube Benjamín Cordero",
-          "titulo": "OpenAI lanzó TODO esto: las 10 claves del DevDay",
-          "link": "https://www.youtube.com/watch?v=2v-_ustjm6k"
-        }
-      ],
-      "cobertura": 1,
-      "personas": [
-        "Benjamín Cordero"
-      ],
-      "etiquetas": [
-        "▶ Video",
-        "🎙 Benjamín Cordero"
       ],
       "importancia": 2
     }
